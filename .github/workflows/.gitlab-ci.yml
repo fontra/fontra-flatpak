@@ -1,0 +1,112 @@
+variables:
+  # Application id of the app, should be same as id used in flatpak manifest and MetaInfo
+  APP_ID: xyz.fontra.FontraPak
+  # Location of the flatpak manifest, root of git repository
+  MANIFEST_PATH: $CI_PROJECT_DIR/${APP_ID}.yml
+  # Name of flatpak bundle
+  BUNDLE: "${APP_ID}.flatpak"
+  # Docker image to use
+  DOCKER_IMAGE: "ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08"
+  SCHEDULE_TASK: default
+
+stages:
+  - setup
+  - build
+  - deploy
+
+# This will check for updates using external data checker and send PRs to the repo
+update-sources:
+  stage: setup
+  image:
+    # https://github.com/flathub-infra/flatpak-external-data-checker
+    name: ghcr.io/flathub/flatpak-external-data-checker
+    # Open shell rather than the bin
+    entrypoint: [""]
+  before_script:
+    - git config --global user.name "${GITLAB_USER_LOGIN}"
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+  script:
+    - /app/flatpak-external-data-checker --update --commit-only $MANIFEST_PATH
+
+    # Creates a merge request targetting the default repo branch and sets up auto merge when pipeline succeeds
+    - git push -o merge_request.create -o merge_request.target=${CI_DEFAULT_BRANCH} -o merge_request.merge_when_pipeline_succeeds
+      "https://${GITLAB_USER_NAME}:${CI_GIT_TOKEN}@${CI_REPOSITORY_URL#*@}" || true
+  artifacts:
+    paths:
+      - $MANIFEST_PATH
+    expire_in: 1 week
+  rules:
+    # Set up a pipeline schedule for this https://docs.gitlab.com/ee/ci/pipelines/schedules.html
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "trigger"
+      when: always
+    - when: never
+
+flatpak:
+  stage: build
+  image: ${DOCKER_IMAGE}
+  variables:
+    # Stable Flathub repo
+    RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
+  script:
+    # Set up an user as the docker image used here comes with none
+    - |
+      cat <<EOF > /etc/passwd
+      root:x:0:0:root:/root:/bin/bash
+      EOF
+
+      cat <<EOF > /etc/group
+      root:x:0:
+      EOF
+
+    # Sets up the stable Flathub repository for dependencies
+    - flatpak remote-add --user --if-not-exists flathub ${RUNTIME_REPO}
+    # Sets up GPG signing
+    # Initialise GPG
+    - gpg --list-keys --with-keygrip
+    - echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+    - gpg-connect-agent reloadagent /bye
+    - cat $GPG_PASSPHRASE | /usr/libexec/gpg-preset-passphrase --preset $GPG_KEY_GREP
+    - gpg --import --batch ${GPG_PRIVATE_KEY}
+    # Build & install build dependencies, branch can be unset too then it will default to master see man flatpak-manifest > branch
+    - flatpak-builder build --user --install-deps-from=flathub --gpg-sign=${GPG_KEY_ID} --disable-rofiles-fuse --disable-updates --force-clean --repo=repo ${BRANCH:+--default-branch=$BRANCH} ${MANIFEST_PATH}
+    # Generate a Flatpak bundle for testing in MRs
+    - flatpak build-bundle --gpg-sign=${GPG_KEY_ID} repo ${BUNDLE} --runtime-repo=${RUNTIME_REPO} ${APP_ID} ${BRANCH}
+    # flatpak-builder exports contents to repo folder after building
+    # This generates summary, appstream refs and prunes the folder to keep the latest commit only in preparation for publishing
+    - flatpak build-update-repo --gpg-sign=${GPG_KEY_ID} --generate-static-deltas --prune repo/
+  artifacts:
+    paths:
+      - $BUNDLE
+      # This artifact will be used when publishing to the static site
+      - repo
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+
+# Deploys the generated package to Gitlab pages mitradranirban.gitlab.io/fontrahub
+pages:
+  variables:
+    BUILD_OUTPUT_PATH: ${CI_PROJECT_DIR}/repo
+  stage: deploy
+  image: alpine:latest
+  before_script:
+  script:
+  - apk add rsync
+  - find $BUILD_OUTPUT_PATH \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i -e "s#href=\"\/#href=\"$CI_PAGES_URL/#g" -e "s#src=\"\/#src=\"$CI_PAGES_URL/#g" # Update any HTML paths if needed
+  - mkdir -p public
+  - rsync -av --delete  --exclude='.git' $BUILD_OUTPUT_PATH/ public/  # Copy repo/ contents to public/
+
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success

@@ -1,0 +1,48 @@
+id: xyz.fontra.FontraPak
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: fontrapak
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --device=dri
+  - --share=network
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-download
+
+modules:
+  - name: fontrapak
+    buildsystem: simple
+    sources:
+      - type: archive
+        url: https://github.com/mitradranirban/fontra-pak-linux/releases/download/2025.12.0/fontrapak.tgz
+        sha256: a7fc0b11a34ceddf523d583c8e37f627ab5d010177de9d1fe7927667da78b0ae
+      - type: file
+        path: data/icons/xyz.fontra.FontraPak.svg
+        dest-filename: xyz.fontra.FontraPak.svg
+      - type: file
+        path: xyz.fontra.FontraPak.desktop
+        dest-filename: xyz.fontra.FontraPak.desktop
+      - type: file
+        path: xyz.fontra.FontraPak.metainfo.xml
+        dest-filename: xyz.fontra.FontraPak.metainfo.xml
+      - type: file
+        path: fontrapak.sh
+
+
+    build-commands:
+      # Create bin directory
+      - install -d /app/bin
+      
+      # move and rename binary
+      - mv fontrapak /app/bin/fontrapak-bin
+
+      
+      # Install wrapper script, icon, metainfo and desktop file 
+      - install -m755 fontrapak.sh /app/bin/fontrapak
+      - install -Dm644 xyz.fontra.FontraPak.svg /app/share/icons/hicolor/scalable/apps/xyz.fontra.FontraPak.svg
+      - install -Dm644 xyz.fontra.FontraPak.desktop /app/share/applications/xyz.fontra.FontraPak.desktop
+      - install -Dm644 xyz.fontra.FontraPak.metainfo.xml /app/share/metainfo/xyz.fontra.FontraPak.metainfo.xml
+     
