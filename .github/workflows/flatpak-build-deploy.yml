@@ -1,0 +1,180 @@
+name: Flatpak Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your default branch
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Run on a schedule (e.g., daily at 2 AM UTC)
+    - cron: '0 2 * * *'
+
+env:
+  # Application id of the app, should be same as id used in flatpak manifest and MetaInfo
+  APP_ID: xyz. fontra.FontraPak
+  # Location of the flatpak manifest, root of git repository
+  MANIFEST_PATH: ${{ github.workspace }}/${{ env.APP_ID }}. yml
+  # Name of flatpak bundle
+  BUNDLE: "${{ env.APP_ID }}. flatpak"
+  # Docker image to use
+  DOCKER_IMAGE: "ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08"
+
+jobs:
+  update-sources:
+    name: Update Sources
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    container:
+      image: ghcr.io/flathub/flatpak-external-data-checker
+      options: --entrypoint /bin/bash
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for external data updates
+        run: /app/flatpak-external-data-checker --update --commit-only ${{ env.MANIFEST_PATH }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update external data sources"
+          title: "chore: update external data sources"
+          body: "Automated update of external data sources from flatpak-external-data-checker"
+          branch: "update-sources"
+          base: ${{ github.ref }}
+
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    container:
+      image: ${{ env.DOCKER_IMAGE }}
+      options: --privileged
+    env:
+      RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up container environment
+        run: |
+          cat <<EOF > /etc/passwd
+          root:x:0:0:root:/root:/bin/bash
+          EOF
+
+          cat <<EOF > /etc/group
+          root:x:0:
+          EOF
+
+      - name: Set up Flathub repository
+        run: |
+          flatpak remote-add --user --if-not-exists flathub ${RUNTIME_REPO}
+
+      - name: Set up GPG signing
+        run: |
+          gpg --list-keys --with-keygrip
+          echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye
+          echo "${{ secrets.GPG_PASSPHRASE }}" | /usr/libexec/gpg-preset-passphrase --preset ${{ secrets.GPG_KEY_GREP }}
+          gpg --import --batch ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Build Flatpak
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          flatpak-builder build \
+            --user \
+            --install-deps-from=flathub \
+            --gpg-sign=${GPG_KEY_ID} \
+            --disable-rofiles-fuse \
+            --disable-updates \
+            --force-clean \
+            --repo=repo \
+            --default-branch=$BRANCH \
+            ${{ env.APP_ID }}.yml
+
+      - name: Generate Flatpak bundle
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          flatpak build-bundle \
+            --gpg-sign=${GPG_KEY_ID} \
+            repo \
+            ${{ env. BUNDLE }} \
+            --runtime-repo=${RUNTIME_REPO} \
+            ${{ env.APP_ID }} \
+            ${BRANCH}
+
+      - name: Update Flatpak repository metadata
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          flatpak build-update-repo \
+            --gpg-sign=${GPG_KEY_ID} \
+            --generate-static-deltas \
+            --prune repo/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-build
+          path: |
+            ${{ env.BUNDLE }}
+            repo/
+          retention-days: 7
+
+  pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: flatpak
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps. deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: flatpak-build
+          path: repo
+
+      - name: Update HTML paths for GitHub Pages
+        run: |
+          apk add --no-cache rsync sed
+          BUILD_OUTPUT_PATH="${{ github.workspace }}/repo"
+          find $BUILD_OUTPUT_PATH \( -type d -name .git -prune \) -o -type f -print0 | \
+            xargs -0 sed -i \
+              -e "s#href=\"\/#href=\"${{ steps.deployment.outputs.page_url }}/#g" \
+              -e "s#src=\"\/#src=\"${{ steps.deployment.outputs.page_url }}/#g"
+          mkdir -p public
+          rsync -av --delete --exclude='.git' $BUILD_OUTPUT_PATH/ public/
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
