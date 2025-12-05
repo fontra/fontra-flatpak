@@ -12,6 +12,7 @@ on:
 env:
   APP_ID: xyz.fontra.FontraPak
   DOCKER_IMAGE: "ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08"
+  RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
 
 jobs:
   update-sources:
@@ -55,7 +56,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Get latest release info
         id: latest-release
         run: |
@@ -67,7 +68,7 @@ jobs:
           echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
           echo "Latest version: $VERSION"
           echo "Asset URL: $ASSET_URL"
-      
+
       - name: Download and calculate SHA256
         id: calculate-sha
         run: |
@@ -76,21 +77,21 @@ jobs:
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
           echo "SHA256: $SHA256"
           rm FontraPakUbuntu.tgz
-      
+
       - name: Update manifest file
         run: |
           VERSION="${{ steps.latest-release.outputs.version }}"
           SHA256="${{ steps.calculate-sha.outputs.sha256 }}"
           sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPakUbuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPakUbuntu.tgz|" ${{ env.APP_ID }}.yml
           sed -i "s|sha256: .*|sha256: ${SHA256}|" ${{ env.APP_ID }}.yml
-      
+
       - name: Update metainfo.xml with new release
         run: |
           VERSION="${{ steps.latest-release.outputs.version }}"
           VERSION_CLEAN=$(echo $VERSION | sed 's/^v//')
           DATE=$(date +%Y-%m-%d)
           sed -i "/<releases>/a\    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\"/>" ${{ env.APP_ID }}.metainfo.xml
-      
+
       - name: Commit and push changes
         run: |
           git config --local user.name "github-actions[bot]"
@@ -109,74 +110,83 @@ jobs:
     name: Build Flatpak
     runs-on: ubuntu-latest
     if: github.event_name != 'schedule'
-    container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
-      options: --privileged
-    env:
-      RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
     permissions:
       contents: read
       packages: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up container environment
-        run: |
-          cat <<EOF > /etc/passwd
-          root:x:0:0:root:/root:/bin/bash
-          EOF
-          cat <<EOF > /etc/group
-          root:x:0:
-          EOF
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          trust_level: 5
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: ${{ env.APP_ID }}.yml
+          bundle: ${{ env.APP_ID }}.flatpak
+          branch: ${{ github.ref_name }}
+          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
+          upload-artifact: true
+          cache-key: flatpak-builder-${{ github.sha }}
+
+  # Alternative: Manual flatpak-builder in container (if you need more control)
+  flatpak-manual:
+    name: Build Flatpak (Manual)
+    runs-on: ubuntu-latest
+    if: false  # Set to true to use this instead of the above job
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          trust_level: 5
 
       - name: Set up Flathub repository
         run: |
-          flatpak remote-add --user --if-not-exists flathub ${RUNTIME_REPO}
-
-      - name: Set up GPG signing
-        run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-          echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
-          gpg-connect-agent reloadagent /bye
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d | gpg --batch --import
-          echo "${{ secrets.GPG_PASSPHRASE }}" | /usr/libexec/gpg-preset-passphrase --preset ${{ secrets.GPG_KEY_GRIP }}
+          flatpak remote-add --user --if-not-exists flathub ${{ env.RUNTIME_REPO }}
 
       - name: Build Flatpak
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          BRANCH: ${{ github.ref_name }}
         run: |
           flatpak-builder build \
             --user \
             --install-deps-from=flathub \
-            --gpg-sign=${GPG_KEY_ID} \
+            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
             --disable-rofiles-fuse \
             --disable-updates \
             --force-clean \
             --repo=repo \
-            --default-branch=$BRANCH \
+            --default-branch=${{ github.ref_name }} \
             ${{ env.APP_ID }}.yml
 
       - name: Generate Flatpak bundle
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          BRANCH: ${{ github.ref_name }}
         run: |
           flatpak build-bundle \
-            --gpg-sign=${GPG_KEY_ID} \
+            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
             repo \
             ${{ env.APP_ID }}.flatpak \
-            --runtime-repo=${RUNTIME_REPO} \
+            --runtime-repo=${{ env.RUNTIME_REPO }} \
             ${{ env.APP_ID }} \
-            ${BRANCH}
+            ${{ github.ref_name }}
 
       - name: Update Flatpak repository metadata
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: |
           flatpak build-update-repo \
-            --gpg-sign=${GPG_KEY_ID} \
+            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
             --generate-static-deltas \
             --prune repo/
 
@@ -212,9 +222,8 @@ jobs:
 
       - name: Prepare files for GitHub Pages
         run: |
-          sudo apt-get update && sudo apt-get install -y rsync
           mkdir -p public
-          rsync -av --delete --exclude='.git' build-output/repo/ public/
+          cp -r build-output/repo/* public/ || cp -r build-output/* public/
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
