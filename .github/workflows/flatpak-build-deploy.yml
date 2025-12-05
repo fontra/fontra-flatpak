@@ -14,7 +14,7 @@ env:
   # Application id of the app, should be same as id used in flatpak manifest and MetaInfo
   APP_ID: xyz.fontra.FontraPak
   # Location of the flatpak manifest, root of git repository
-  MANIFEST_PATH: ${{ github.workspace }}/${{ env.APP_ID }}. yml
+  MANIFEST_PATH: ${{ github.workspace }}/${{ env.APP_ID }}.yml
   # Name of flatpak bundle
   BUNDLE: "${{ env.APP_ID }}.flatpak"
   # Docker image to use
@@ -54,7 +54,7 @@ jobs:
           branch: "update-sources"
           base: ${{ github.ref }}
 
-    update-release:
+  update-release:
     name: Update to Latest FontraPak Release
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
