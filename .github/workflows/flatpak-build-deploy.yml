@@ -11,7 +11,6 @@ on:
 
 env:
   APP_ID: xyz.fontra.FontraPak
-  DOCKER_IMAGE: "ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08"
   RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
 
 jobs:
@@ -63,11 +62,8 @@ jobs:
           RELEASE_DATA=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest)
           VERSION=$(echo "$RELEASE_DATA" | jq -r .tag_name)
           ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPakUbuntu.tgz") | .browser_download_url')
-          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
-          echo "Latest version: $VERSION"
-          echo "Asset URL: $ASSET_URL"
 
       - name: Download and calculate SHA256
         id: calculate-sha
@@ -75,7 +71,6 @@ jobs:
           curl -L -o FontraPakUbuntu.tgz "${{ steps.latest-release.outputs.asset_url }}"
           SHA256=$(sha256sum FontraPakUbuntu.tgz | awk '{print $1}')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-          echo "SHA256: $SHA256"
           rm FontraPakUbuntu.tgz
 
       - name: Update manifest file
@@ -96,12 +91,10 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          
           if git diff --quiet; then
             echo "No changes to commit"
             exit 0
           fi
-          
           git add ${{ env.APP_ID }}.yml ${{ env.APP_ID }}.metainfo.xml
           git commit -m "chore: update to FontraPak ${{ steps.latest-release.outputs.version }}"
           git push
@@ -110,35 +103,6 @@ jobs:
     name: Build Flatpak
     runs-on: ubuntu-latest
     if: github.event_name != 'schedule'
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          trust_level: 5
-
-      - name: Build Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          manifest-path: ${{ env.APP_ID }}.yml
-          bundle: ${{ env.APP_ID }}.flatpak
-          branch: ${{ github.ref_name }}
-          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
-          upload-artifact: true
-          cache-key: flatpak-builder-${{ github.sha }}
-
-  # Alternative: Manual flatpak-builder in container (if you need more control)
-  flatpak-manual:
-    name: Build Flatpak (Manual)
-    runs-on: ubuntu-latest
-    if: false  # Set to true to use this instead of the above job
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
       options: --privileged
@@ -156,48 +120,14 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
           trust_level: 5
 
-      - name: Set up Flathub repository
-        run: |
-          flatpak remote-add --user --if-not-exists flathub ${{ env.RUNTIME_REPO }}
-
-      - name: Build Flatpak
-        run: |
-          flatpak-builder build \
-            --user \
-            --install-deps-from=flathub \
-            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
-            --disable-rofiles-fuse \
-            --disable-updates \
-            --force-clean \
-            --repo=repo \
-            --default-branch=${{ github.ref_name }} \
-            ${{ env.APP_ID }}.yml
-
-      - name: Generate Flatpak bundle
-        run: |
-          flatpak build-bundle \
-            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
-            repo \
-            ${{ env.APP_ID }}.flatpak \
-            --runtime-repo=${{ env.RUNTIME_REPO }} \
-            ${{ env.APP_ID }} \
-            ${{ github.ref_name }}
-
-      - name: Update Flatpak repository metadata
-        run: |
-          flatpak build-update-repo \
-            --gpg-sign=${{ steps.import_gpg.outputs.keyid }} \
-            --generate-static-deltas \
-            --prune repo/
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          name: flatpak-build
-          path: |
-            ${{ env.APP_ID }}.flatpak
-            repo/
-          retention-days: 7
+          manifest-path: ${{ env.APP_ID }}.yml
+          bundle: ${{ env.APP_ID }}.flatpak
+          branch: ${{ github.ref_name }}
+          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
+          upload-artifact: true
+          cache-key: flatpak-builder-${{ github.sha }}
 
   pages:
     name: Deploy to GitHub Pages
@@ -217,13 +147,13 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: flatpak-build
+          name: flatpak
           path: build-output
 
       - name: Prepare files for GitHub Pages
         run: |
           mkdir -p public
-          cp -r build-output/repo/* public/ || cp -r build-output/* public/
+          cp -r build-output/* public/
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
