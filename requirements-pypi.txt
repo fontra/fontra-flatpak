@@ -4,7 +4,7 @@ pyinstaller==6.17.0
 setuptools==80.8.0  # pinned!
 PyQt6==6.7.1
 PyQt6-Qt6==6.7.3
-PyQt6-sip==13.10.2
+PyQt6-sip==13.10.3
 # Use patched fork to work around https://github.com/matthew-brett/delocate/issues/228
 # delocate==0.12.0
 psutil==7.1.3
