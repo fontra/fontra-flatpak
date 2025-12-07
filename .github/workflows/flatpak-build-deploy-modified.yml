@@ -1,0 +1,275 @@
+name: Flatpak Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+env:
+  APP_ID: xyz.fontra.FontraPak
+  RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
+
+jobs:
+  update-sources:
+    name: Update Sources
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    container:
+      image: ghcr.io/flathub/flatpak-external-data-checker
+      options: --entrypoint /bin/bash
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for external data updates
+        run: /app/flatpak-external-data-checker --update --commit-only ${{ github.workspace }}/${{ env.APP_ID }}.yml
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update external data sources"
+          title: "chore: update external data sources"
+          body: "Automated update of external data sources from flatpak-external-data-checker"
+          branch: "update-sources"
+          base: ${{ github.ref_name }}
+
+  update-release:
+    name: Update to Latest FontraPak Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest release info
+        id: latest-release
+        run: |
+          RELEASE_DATA=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest)
+          VERSION=$(echo "$RELEASE_DATA" | jq -r .tag_name)
+          ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPakUbuntu.tgz") | .browser_download_url')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
+
+      - name: Download and calculate SHA256
+        id: calculate-sha
+        run: |
+          curl -L -o FontraPakUbuntu.tgz "${{ steps.latest-release.outputs.asset_url }}"
+          SHA256=$(sha256sum FontraPakUbuntu.tgz | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          rm FontraPakUbuntu.tgz
+
+      - name: Update manifest file
+        run: |
+          VERSION="${{ steps.latest-release.outputs.version }}"
+          SHA256="${{ steps.calculate-sha.outputs.sha256 }}"
+          sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPakUbuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPakUbuntu.tgz|" ${{ env.APP_ID }}.yml
+          sed -i "s|sha256: .*|sha256: ${SHA256}|" ${{ env.APP_ID }}.yml
+
+      - name: Update metainfo.xml with new release
+        run: |
+          VERSION="${{ steps.latest-release.outputs.version }}"
+          VERSION_CLEAN=$(echo $VERSION | sed 's/^v//')
+          DATE=$(date +%Y-%m-%d)
+          sed -i "/<releases>/a\    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\"/>" ${{ env.APP_ID }}.metainfo.xml
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git add ${{ env.APP_ID }}.yml ${{ env.APP_ID }}.metainfo.xml
+          git commit -m "chore: update to FontraPak ${{ steps.latest-release.outputs.version }}"
+          git push
+
+  generate-dependencies:
+    name: Generate Python Dependencies
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install flatpak-pip-generator
+        run: |
+          pip install flatpak-pip-generator
+
+      - name: Generate filtered requirements.txt
+        run: |
+          # Remove git+ and PyQt dependencies
+          grep -v "^git+" requirements.txt | grep -v "PyQt" > requirements-filtered.txt
+          echo "Filtered requirements:"
+          cat requirements-filtered.txt
+
+      - name: Generate pypi-dependencies.json
+        run: |
+          flatpak-pip-generator --runtime='org.freedesktop.Sdk//23.08' \
+            --requirements-file=requirements-filtered.txt \
+            --output=pypi-dependencies
+
+      - name: Fetch git dependency commit hashes
+        id: git-commits
+        run: |
+          echo "Fetching latest commit hashes for git dependencies..."
+
+          FONTRA_COMMIT=$(git ls-remote https://github.com/fontra/fontra.git HEAD | cut -f1)
+          echo "fontra_commit=$FONTRA_COMMIT" >> $GITHUB_OUTPUT
+
+          FONTRA_COMPILE_COMMIT=$(git ls-remote https://github.com/fontra/fontra-compile.git HEAD | cut -f1)
+          echo "fontra_compile_commit=$FONTRA_COMPILE_COMMIT" >> $GITHUB_OUTPUT
+
+          FONTRA_RCJK_COMMIT=$(git ls-remote https://github.com/fontra/fontra-rcjk.git HEAD | cut -f1)
+          echo "fontra_rcjk_commit=$FONTRA_RCJK_COMMIT" >> $GITHUB_OUTPUT
+
+          FONTRA_GLYPHS_COMMIT=$(git ls-remote https://github.com/fontra/fontra-glyphs.git HEAD | cut -f1)
+          echo "fontra_glyphs_commit=$FONTRA_GLYPHS_COMMIT" >> $GITHUB_OUTPUT
+
+          DELOCATE_COMMIT=$(git ls-remote https://github.com/justvanrossum/delocate.git HEAD | cut -f1)
+          echo "delocate_commit=$DELOCATE_COMMIT" >> $GITHUB_OUTPUT
+
+          echo "Commit hashes fetched:"
+          echo "fontra: $FONTRA_COMMIT"
+          echo "fontra-compile: $FONTRA_COMPILE_COMMIT"
+          echo "fontra-rcjk: $FONTRA_RCJK_COMMIT"
+          echo "fontra-glyphs: $FONTRA_GLYPHS_COMMIT"
+          echo "delocate: $DELOCATE_COMMIT"
+
+      - name: Update manifest with git commit hashes
+        run: |
+          cat > git-dependencies-update.sed << 'EOF'
+          # Update fontra commit
+          s|url: https://github.com/fontra/fontra.git$|url: https://github.com/fontra/fontra.git\n        commit: ${{ steps.git-commits.outputs.fontra_commit }}|
+
+          # Update fontra-compile commit
+          s|url: https://github.com/fontra/fontra-compile.git$|url: https://github.com/fontra/fontra-compile.git\n        commit: ${{ steps.git-commits.outputs.fontra_compile_commit }}|
+
+          # Update fontra-rcjk commit
+          s|url: https://github.com/fontra/fontra-rcjk.git$|url: https://github.com/fontra/fontra-rcjk.git\n        commit: ${{ steps.git-commits.outputs.fontra_rcjk_commit }}|
+
+          # Update fontra-glyphs commit
+          s|url: https://github.com/fontra/fontra-glyphs.git$|url: https://github.com/fontra/fontra-glyphs.git\n        commit: ${{ steps.git-commits.outputs.fontra_glyphs_commit }}|
+
+          # Update delocate commit
+          s|url: https://github.com/justvanrossum/delocate.git$|url: https://github.com/justvanrossum/delocate.git\n        commit: ${{ steps.git-commits.outputs.delocate_commit }}|
+          EOF
+
+          # Apply updates if manifest exists
+          if [ -f "${{ env.APP_ID }}.yml" ]; then
+            sed -i -f git-dependencies-update.sed ${{ env.APP_ID }}.yml
+          fi
+
+      - name: Commit generated files
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && ! git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add pypi-dependencies.json requirements-filtered.txt ${{ env.APP_ID }}.yml || true
+          git diff-index --quiet HEAD || git commit -m "chore: update Python dependencies and git commit hashes"
+          git push || echo "No changes to push"
+
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-latest
+    needs: generate-dependencies
+    if: github.event_name != 'schedule'
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-23.08
+      options: --privileged
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          trust_level: 5
+
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: ${{ env.APP_ID }}.yml
+          bundle: ${{ env.APP_ID }}.flatpak
+          branch: ${{ github.ref_name }}
+          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
+          upload-artifact: true
+          cache-key: flatpak-builder-${{ github.sha }}
+
+      - name: Generate repository summary
+        run: |
+          flatpak build-update-repo --gpg-sign=${{ steps.import_gpg.outputs.keyid }} --generate-static-deltas --prune repo/
+
+      - name: Upload OSTree repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-repo
+          path: repo/
+
+  pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: flatpak
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download OSTree repository
+        uses: actions/download-artifact@v4
+        with:
+          name: flatpak-repo
+          path: repo
+
+      - name: Prepare files for GitHub Pages
+        run: |
+          mkdir -p public
+          cp -r repo/* public/
+          cp ${{ env.APP_ID }}.flatpakref public/ || true
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

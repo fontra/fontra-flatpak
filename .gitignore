@@ -133,5 +133,3 @@ dmypy.json
 
 # Ignore OS related files
 .DS_Store
-build_bundle
-.flatpak-builder

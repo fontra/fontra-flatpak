@@ -1,0 +1,7 @@
+aiohttp==3.13.2
+pyinstaller==6.17.0
+# pin setuptools for now to avoid new pkg_resources warning
+setuptools==80.8.0  # pinned!
+# Use patched fork to work around https://github.com/matthew-brett/delocate/issues/228
+# delocate==0.12.0
+psutil==7.1.3
