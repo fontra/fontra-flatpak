@@ -25,5 +25,5 @@ flatpak update xyz.fontra.FontraPak
 flatpak run xyz.fontra.FontraPak
 ```
 * Alternatively, open your app menu app menu and click on the Fontra icon
-! [Fontra icon](https://fontra.xyz/Fontra-icon.svg)
+! [Fontra icon](https://fontra.xyz/fontra-icon.svg)
   
