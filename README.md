@@ -30,4 +30,7 @@ flatpak run xyz.fontra.FontraPak
   
 ### Known Issues 
  As per flatpak sandboxing recommendations, by default, the flatpak is allowed to access Documents and Download folder only. To access any other folder, you have to run from command line
+ ```
 flatpak override xyz.fontra.FontraPak --filesystem=your/folder/path
+```
+For any other problem, please [open an Issue](https://github.com/fontra/fontra-flatpak/issues)
