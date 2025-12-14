@@ -6,8 +6,6 @@ on:
       - main
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: '0 2 * * *'
 
 env:
   APP_ID: xyz.fontra.FontraPak
