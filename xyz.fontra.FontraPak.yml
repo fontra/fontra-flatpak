@@ -9,8 +9,7 @@ finish-args:
   - --socket=x11
   - --device=dri
   - --share=network
-  - --filesystem=xdg-documents
-  - --filesystem=xdg-download
+  - --filesystem=host
 
 modules:
   - name: fontrapak
