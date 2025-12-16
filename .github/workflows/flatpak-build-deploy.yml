@@ -59,23 +59,23 @@ jobs:
         run: |
           RELEASE_DATA=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest)
           VERSION=$(echo "$RELEASE_DATA" | jq -r .tag_name)
-          ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPakUbuntu.tgz") | .browser_download_url')
+          ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPak-Ubuntu.tgz") | .browser_download_url')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
 
       - name: Download and calculate SHA256
         id: calculate-sha
         run: |
-          curl -L -o FontraPakUbuntu.tgz "${{ steps.latest-release.outputs.asset_url }}"
-          SHA256=$(sha256sum FontraPakUbuntu.tgz | awk '{print $1}')
+          curl -L -o FontraPak-Ubuntu.tgz "${{ steps.latest-release.outputs.asset_url }}"
+          SHA256=$(sha256sum FontraPak-Ubuntu.tgz | awk '{print $1}')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-          rm FontraPakUbuntu.tgz
+          rm FontraPak-Ubuntu.tgz
 
       - name: Update manifest file
         run: |
           VERSION="${{ steps.latest-release.outputs.version }}"
           SHA256="${{ steps.calculate-sha.outputs.sha256 }}"
-          sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPakUbuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPakUbuntu.tgz|" ${{ env.APP_ID }}.yml
+          sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPak-Ubuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPak-Ubuntu.tgz|" ${{ env.APP_ID }}.yml
           sed -i "s|sha256: .*|sha256: ${SHA256}|" ${{ env.APP_ID }}.yml
 
       - name: Update metainfo.xml with new release
