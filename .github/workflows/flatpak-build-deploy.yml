@@ -12,39 +12,6 @@ env:
   RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
 
 jobs:
-  update-sources:
-    name: Update Sources
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    container:
-      image: ghcr.io/flathub/flatpak-external-data-checker
-      options: --entrypoint /bin/bash
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Check for external data updates
-        run: /app/flatpak-external-data-checker --update --commit-only ${{ github.workspace }}/${{ env.APP_ID }}.yml
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update external data sources"
-          title: "chore: update external data sources"
-          body: "Automated update of external data sources from flatpak-external-data-checker"
-          branch: "update-sources"
-          base: ${{ github.ref_name }}
-
   update-release:
     name: Update to Latest FontraPak Release
     runs-on: ubuntu-latest
