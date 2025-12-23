@@ -1,11 +1,13 @@
 name: Flatpak Build and Deploy
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  workflow_dispatch:  # allow manual trigger
+  repository_dispatch:
+    types: [release-event]
 
 env:
   APP_ID: xyz.fontra.FontraPak
