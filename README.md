@@ -29,8 +29,6 @@ flatpak run xyz.fontra.FontraPak
   ![Fontra icon](https://fontra.xyz/fontra-icon.svg)
   
 ### Known Issues 
- As per flatpak sandboxing recommendations, by default, the flatpak is allowed to access Documents and Download folder only. To access any other folder, you have to run from command line
- ```
-flatpak override xyz.fontra.FontraPak --filesystem=your/folder/path
-```
+ The flatpak is reported to be working slowly in some distros like Debian Trixie where the base Ubuntu binary is working fine. We are currently investigating the issue.
+ 
 For any other problem, please [open an Issue](https://github.com/fontra/fontra-flatpak/issues)
