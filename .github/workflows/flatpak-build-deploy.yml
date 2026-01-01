@@ -101,7 +101,7 @@ jobs:
           flatpak build-update-repo --gpg-sign=${{ steps.import_gpg.outputs.keyid }} --generate-static-deltas --prune repo/
 
       - name: Upload OSTree repository
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: flatpak-repo
           path: repo/
