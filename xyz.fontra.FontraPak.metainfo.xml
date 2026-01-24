@@ -22,6 +22,7 @@
   </categories>
   <launchable type="desktop-id">xyz.fontra.FontraPak.desktop</launchable>
   <releases>
+    <release version="2026.1.3" date="2026-01-24"/>
     <release version="2026.1.2" date="2026-01-15"/>
     <release version="2026.1.1" date="2026-01-12"/>
     <release version="2026.1.0" date="2026-01-11"/>
