@@ -1,2 +1,6 @@
 #!/usr/bin/env bash 
-    exec /app/bin/fontrapak-bin "$@"
+# Workaround for flatpak 1.16+ sandbox /tmp restrictions
+export TMPDIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+mkdir -p "$TMPDIR"
+
+exec /app/bin/fontrapak-bin "$@"
