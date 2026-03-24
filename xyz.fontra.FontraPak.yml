@@ -17,8 +17,8 @@ modules:
     buildsystem: simple
     sources:
       - type: archive
-        url: https://github.com/fontra/fontra-pak/releases/download/2026.3.4/FontraPak-Ubuntu.tgz
-        sha256: db3528f050d14579f186514e4318ace9a9bc206fe7d600dc5c1d166bd9359059
+        url: https://github.com/fontra/fontra-pak/releases/download/2026.3.5/FontraPak-Ubuntu.tgz
+        sha256: 8c21a1bddb0508cddfcbd06d48518d067e5d6e5da8bad5fd75bce426496c1ed0
         strip-components: 0
       - type: file
         path: data/icons/xyz.fontra.FontraPak.svg
