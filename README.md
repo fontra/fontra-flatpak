@@ -9,7 +9,7 @@
 * Otherwise, copy and paste the following command into your terminal:
 
 ```bash
-flatpak install --from [https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref](https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref)
+flatpak install --from https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref
 ```
 * Type Y for yes and provide your password when prompted
 * Fontrapak with all its dependancy will be installed in your computer
