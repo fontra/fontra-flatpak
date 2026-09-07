@@ -52,10 +52,10 @@ jobs:
           VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
           DATE=$(date +%Y-%m-%d)
 
-          # 1. Fetch release body Markdown from GitHub API
+          # 1. Fetch release body from GitHub API
           RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
 
-          # 2. Convert Markdown headers and bullet points to AppStream XML
+          # 2. Convert Markdown to AppStream XML structure
           FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
             BEGIN { in_list = 0 }
             /^(###?|[A-Za-z]+:?)/ {
@@ -67,23 +67,24 @@ jobs:
             /^[-*]/ {
               if (!in_list) { print "        <ul>"; in_list = 1 }
               gsub(/^[-*] /, "")
-              # Escape special XML characters
               gsub(/&/, "&amp;")
               gsub(/</, "&lt;")
               gsub(/>/, "&gt;")
+              gsub(/\[([^\]]+)\]\([^)]+\)/, "\\1") # Strip markdown links
               print "          <li>" $0 "</li>"
               next
             }
             END { if (in_list) print "        </ul>" }
           ')
 
-          # 3. Construct full release XML block
+          # 3. Construct the release block
           RELEASE_BLOCK="    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\">\n      <description>\n${FORMATTED_NOTES}\n      </description>\n    </release>"
-
-          # 4. Escape newline characters for sed insertion
           RELEASE_BLOCK_ESCAPED=$(echo "$RELEASE_BLOCK" | sed ':a;N;$!ba;s/\n/\\n/g')
 
-          # 5. Prepend the new release block inside the <releases> tag
+          # 4. Remove existing duplicate line if version is already listed
+          sed -i "/<release version=\"${VERSION_CLEAN}\"/d" ${{ env.APP_ID }}.metainfo.xml
+
+          # 5. Insert updated release block at the top of <releases>
           sed -i "/<releases>/a\\${RELEASE_BLOCK_ESCAPED}" ${{ env.APP_ID }}.metainfo.xml
 
       - name: Commit and push changes
