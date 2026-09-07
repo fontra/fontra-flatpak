@@ -34,28 +34,28 @@
   </categories>
   <launchable type="desktop-id">xyz.fontra.FontraPak.desktop</launchable>
   <releases>
-    <release version="2026.8.0" date="2026-08-29">
+    <release version="2026.8.0" date="2026-09-07">
       <description>
         <p>New features</p>
         <ul>
-          <li>Added a new font info panel to author and edit conditional substitutions (Designspace "Rules").</li>
-          <li>[fontra-glyphs] Support reading of Glyphs-specific feature variation syntax.</li>
-          <li>Allow the font size in the OpenType code editor to be changed with Zoom In and Zoom out menu items (command/control plus/minus) in the (new) View menu.</li>
-          <li>Optionally show handles and nodes in background layers. To toggle, use the "Nodes and handles for background layers" menu in "View -&gt; Glyph editor appearance".</li>
-          <li>[languages] Initial Russian translation contributed by Dmitry Sivukhin.</li>
-          <li>[languages] Initial Italian translation.</li>
-          <li>[languages] Separate Spanish for Spain and Latin America.</li>
+          <li>Added a new font info panel to author and edit conditional substitutions (Designspace "Rules"). \1, \1</li>
+          <li>[fontra-glyphs] Support reading of Glyphs-specific feature variation syntax. \1, \1, \1</li>
+          <li>Allow the font size in the OpenType code editor to be changed with Zoom In and Zoom out menu items (command/control plus/minus) in the (new) View menu. \1, \1</li>
+          <li>Optionally show handles and nodes in background layers. To toggle, use the "Nodes and handles for background layers" menu in "View -&gt;gt; Glyph editor appearance". \1</li>
+          <li>[languages] Initial Russian translation contributed by Dmitry Sivukhin. \1</li>
+          <li>[languages] Initial Italian translation. \1</li>
+          <li>[languages] Separate Spanish for Spain and Latin America. \1</li>
         </ul>
         <p>Fixes</p>
         <ul>
-          <li>Fix editing the left sidebearing in the Selection Info panel: move anchors and guidelines as well.</li>
-          <li>Support glyph names with spaces.</li>
-          <li>Fix the menu item background color in dark mode when the item has a submenu; Don't dismiss a menu panel when clicking on an item with a submenu.</li>
-          <li>Fixes behavior when a character is not encoded, but the (suggested) glyph name for it does exist in the font.</li>
+          <li>Fix editing the left sidebearing in the Selection Info panel: move anchors and guidelines as well. \1, \1</li>
+          <li>Support glyph names with spaces. \1, \1</li>
+          <li>Fix the menu item background color in dark mode when the item has a submenu; Don't dismiss a menu panel when clicking on an item with a submenu. \1</li>
+          <li>Fixes behavior when a character is not encoded, but the (suggested) glyph name for it does exist in the font. \1</li>
         </ul>
         <p>Improvements</p>
         <ul>
-          <li>Spanish, Portuguese, Chinese, French improvements.</li>
+          <li>Spanish, Portuguese, Chinese, French improvements. \1</li>
         </ul>
       </description>
     </release>
