@@ -48,15 +48,15 @@ jobs:
 
       - name: Update metainfo.xml with new release notes
         run: |
-          VERSION="${{ steps.latest-release.outputs.version }}"
-          VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
-          DATE=$(date +%Y-%m-%d)
+          export VERSION="${{ steps.latest-release.outputs.version }}"
+          export VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+          export RELEASE_DATE=$(date +%Y-%m-%d)
 
-          # Fetch markdown release body
+          # Fetch raw body
           RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
 
-          # Convert Markdown body to AppStream XML structure
-          FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
+          # Format Markdown to simple XML description tags
+          export FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
             BEGIN { in_list = 0 }
             /^(###?|[A-Za-z]+:?)/ {
               if (in_list) { print "        </ul>"; in_list = 0 }
@@ -77,38 +77,43 @@ jobs:
             END { if (in_list) print "        </ul>" }
           ')
 
-          # Use Python to cleanly insert/replace the release element without duplication
-          python3 -c "
+          python3 -c '
+          import os
           import xml.etree.ElementTree as ET
 
-          file_path = '${{ env.APP_ID }}.metainfo.xml'
+          file_path = f"{os.environ[\"APP_ID\"]}.metainfo.xml"
+          version = os.environ["VERSION_CLEAN"]
+          date = os.environ["RELEASE_DATE"]
+          notes = os.environ.get("FORMATTED_NOTES", "")
+
           tree = ET.parse(file_path)
           root = tree.getroot()
-          releases = root.find('releases')
+          releases = root.find("releases")
 
-          version = '${VERSION_CLEAN}'
-          date = '${DATE}'
-          notes = '''${FORMATTED_NOTES}'''
-
-          # Remove existing release element with the same version if present
-          for r in releases.findall('release'):
-              if r.get('version') == version:
+          # Remove existing release entry with matching version to prevent duplicates
+          for r in list(releases.findall("release")):
+              if r.get("version") == version:
                   releases.remove(r)
 
-          # Build new release node
-          new_release = ET.Element('release', {'version': version, 'date': date})
-          desc = ET.Element('description')
+          # Build new release element
+          new_release = ET.Element("release", {"version": version, "date": date})
+          desc = ET.Element("description")
 
-          # Inject pre-formatted HTML description tags
-          desc_tree = ET.fromstring(f'<root>{notes}</root>')
-          for child in desc_tree:
-              desc.append(child)
+          try:
+              desc_tree = ET.fromstring(f"<root>{notes}</root>")
+              for child in desc_tree:
+                  desc.append(child)
+          except Exception:
+              p = ET.Element("p")
+              p.text = f"Release {version}"
+              desc.append(p)
 
           new_release.append(desc)
           releases.insert(0, new_release)
 
-          ET.indent(tree, space='  ')
-          tree.write(file_path, encoding='utf-8', xml_declaration=True)"
+          ET.indent(tree, space="  ")
+          tree.write(file_path, encoding="utf-8", xml_declaration=True)'
+
 
       - name: Commit and push changes
         run: |
