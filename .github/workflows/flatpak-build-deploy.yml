@@ -81,9 +81,10 @@ jobs:
           import os
           import xml.etree.ElementTree as ET
 
-          file_path = f"{os.environ[\"APP_ID\"]}.metainfo.xml"
-          version = os.environ["VERSION_CLEAN"]
-          date = os.environ["RELEASE_DATE"]
+          app_id = os.environ.get("APP_ID", "xyz.fontra.FontraPak")
+          file_path = f"{app_id}.metainfo.xml"
+          version = os.environ.get("VERSION_CLEAN", "")
+          date = os.environ.get("RELEASE_DATE", "")
           notes = os.environ.get("FORMATTED_NOTES", "")
 
           tree = ET.parse(file_path)
