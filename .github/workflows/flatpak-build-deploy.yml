@@ -115,7 +115,6 @@ jobs:
           ET.indent(tree, space="  ")
           tree.write(file_path, encoding="utf-8", xml_declaration=True)'
 
-
       - name: Commit and push changes
         run: |
           git config --local user.name "github-actions[bot]"
@@ -141,26 +140,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v7
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          trust_level: 5
-
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           manifest-path: ${{ env.APP_ID }}.yml
           bundle: ${{ env.APP_ID }}.flatpak
           branch: ${{ github.ref_name }}
-          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
           upload-artifact: true
           cache-key: flatpak-builder-${{ github.sha }}
 
       - name: Generate repository summary
         run: |
-          flatpak build-update-repo --gpg-sign=${{ steps.import_gpg.outputs.keyid }} --generate-static-deltas --prune repo/
+          flatpak build-update-repo --generate-static-deltas --prune repo/
 
       - name: Upload OSTree repository
         uses: actions/upload-artifact@v7
