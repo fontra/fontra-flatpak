@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <component type="desktop">
   <id>xyz.fontra.FontraPak</id>
   <name>FontraPak</name>
   <summary>Standalone desktop build of the Fontra font editor</summary>
   <developer id="fontra.xyz">
-  <name>Fontra Project</name>
-  <url>https://fontra.xyz</url>
+    <name>Fontra Project</name>
+    <url>https://fontra.xyz</url>
   </developer>
   <description>
     <p>
@@ -14,70 +14,133 @@
     <p>
       Fontra focuses on variable font technology and advanced workflows for large font projects such as CJK, offering deeper variable font integration than traditional editors. As a standalone package, FontraPak allows easy installation and use outside the browser, bringing the full editing environment to your desktop.
     </p>
+    <p>Features include:</p>
+    <ul>
+      <li>Full read and write support for .ufo, .designspace, .fontra, and .rcjk formats</li>
+      <li>Partial read and write support for .glyphs and .glyphspackage files</li>
+      <li>Read-only import for .ttf, .otf, .woff, .woff2, and .ttx files</li>
+      <li>Native variable font design, multi-axis interpolation, and axis management</li>
+      <li>Modern vector editing with component support and non-destructive path operations</li>
+      <li>Real-time text shaping engine and OpenType feature testing</li>
+    </ul>
   </description>
-  <url type="homepage">https://github.com/fontra/fontrapak</url>
+  <url type="homepage">https://fontra.xyz/</url>
+  <url type="bugtracker">https://github.com/fontra/fontra-pak/issues</url>
+  <url type="help">https://docs.fontra.xyz/</url>
+  <url type="vcs-browser">https://github.com/fontra/fontra-flatpak</url>
   <categories>
     <category>Graphics</category>
-    <category>Development</category> 
+    <category>Development</category>
   </categories>
   <launchable type="desktop-id">xyz.fontra.FontraPak.desktop</launchable>
   <releases>
-    <release version="2026.8.0" date="2026-08-29"/>
-    <release version="2026.7.2" date="2026-07-23"/>
-    <release version="2026.7.1" date="2026-07-17"/>
-    <release version="2026.7.0" date="2026-07-10"/>
-    <release version="2026.6.5" date="2026-06-28"/>
-    <release version="2026.6.4" date="2026-06-26"/>
-    <release version="2026.6.3" date="2026-06-15"/>
-    <release version="2026.6.2" date="2026-06-11"/>
-    <release version="2026.6.1" date="2026-06-08"/>
-    <release version="2026.6.0" date="2026-06-07"/>
-    <release version="2026.5.1" date="2026-05-12"/>
-    <release version="2026.5.0" date="2026-05-06"/>
-    <release version="2026.4.4" date="2026-04-29"/>
-    <release version="2026.4.3" date="2026-04-15"/>
-    <release version="2026.4.2" date="2026-04-14"/>
-    <release version="2026.4.1" date="2026-04-08"/>
-    <release version="2026.4.0" date="2026-04-01"/>
-    <release version="2026.3.5" date="2026-03-24"/>
-    <release version="2026.3.4" date="2026-03-17"/>
-    <release version="2026.3.3" date="2026-03-12"/>
-    <release version="2026.3.2" date="2026-03-12"/>
-    <release version="2026.3.1" date="2026-03-06"/>
-    <release version="2026.3.0" date="2026-03-06"/>
-    <release version="2026.2.0" date="2026-02-24"/>
-    <release version="2026.2.0" date="2026-02-03"/>
-    <release version="2026.1.3" date="2026-01-30"/>
-    <release version="2026.1.3" date="2026-01-24"/>
-    <release version="2026.1.2" date="2026-01-15"/>
-    <release version="2026.1.1" date="2026-01-12"/>
-    <release version="2026.1.0" date="2026-01-11"/>
-    <release version="2025.12.6" date="2025-12-31"/>
-    <release version="2025.12.4" date="2025-12-23"/>
-    <release version="2025.12.4" date="2025-12-20"/>
-    <release version="2025.12.4" date="2025-12-20"/>
-    <release version="2025.12.3" date="2025-12-16"/>
-    <release version="2025.12.3" date="2025-12-16"/>
-    <release version="2025.12.3" date="2025-12-16"/>
-    <release version="2025.12.2" date="2025-12-13"/>
-    <release version="2025.12.2" date="2025-12-12"/>
-    <release version="2025.12.2" date="2025-12-11"/>
-    <release version="2025.12.2" date="2025-12-10"/>
-    <release version="2025.12.2" date="2025-12-09"/>
-    <release version="2025.12.2" date="2025-12-08"/>
-    <release version="2025.12.2" date="2025-12-07"/>
-    <release version="2025.12.2" date="2025-12-06"/>
-    <release version="2025.12.2" date="2025-12-05"/>
-    <release version="2025.12.0" date="2025-12-03"/>
+    <release version="2026.8.0" date="2026-08-29">
+      <description>
+        <p>New features</p>
+        <ul>
+          <li>Added a new font info panel to author and edit conditional substitutions (Designspace "Rules"). \1, \1</li>
+          <li>[fontra-glyphs] Support reading of Glyphs-specific feature variation syntax. \1, \1, \1</li>
+          <li>Allow the font size in the OpenType code editor to be changed with Zoom In and Zoom out menu items (command/control plus/minus) in the (new) View menu. \1, \1</li>
+          <li>Optionally show handles and nodes in background layers. To toggle, use the "Nodes and handles for background layers" menu in "View -&gt;gt; Glyph editor appearance". \1</li>
+          <li>[languages] Initial Russian translation contributed by Dmitry Sivukhin. \1</li>
+          <li>[languages] Initial Italian translation. \1</li>
+          <li>[languages] Separate Spanish for Spain and Latin America. \1</li>
+        </ul>
+        <p>Fixes</p>
+        <ul>
+          <li>Fix editing the left sidebearing in the Selection Info panel: move anchors and guidelines as well. \1, \1</li>
+          <li>Support glyph names with spaces. \1, \1</li>
+          <li>Fix the menu item background color in dark mode when the item has a submenu; Don't dismiss a menu panel when clicking on an item with a submenu. \1</li>
+          <li>Fixes behavior when a character is not encoded, but the (suggested) glyph name for it does exist in the font. \1</li>
+        </ul>
+        <p>Improvements</p>
+        <ul>
+          <li>Spanish, Portuguese, Chinese, French improvements. \1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2026.7.2" date="2026-07-23" />
+    <release version="2026.7.1" date="2026-07-17" />
+    <release version="2026.7.0" date="2026-07-10" />
+    <release version="2026.6.5" date="2026-06-28" />
+    <release version="2026.6.4" date="2026-06-26" />
+    <release version="2026.6.3" date="2026-06-15" />
+    <release version="2026.6.2" date="2026-06-11" />
+    <release version="2026.6.1" date="2026-06-08" />
+    <release version="2026.6.0" date="2026-06-07" />
+    <release version="2026.5.1" date="2026-05-12" />
+    <release version="2026.5.0" date="2026-05-06" />
+    <release version="2026.4.4" date="2026-04-29" />
+    <release version="2026.4.3" date="2026-04-15" />
+    <release version="2026.4.2" date="2026-04-14" />
+    <release version="2026.4.1" date="2026-04-08" />
+    <release version="2026.4.0" date="2026-04-01" />
+    <release version="2026.3.5" date="2026-03-24" />
+    <release version="2026.3.4" date="2026-03-17" />
+    <release version="2026.3.3" date="2026-03-12" />
+    <release version="2026.3.2" date="2026-03-12" />
+    <release version="2026.3.1" date="2026-03-06" />
+    <release version="2026.3.0" date="2026-03-06" />
+    <release version="2026.2.0" date="2026-02-24" />
+    <release version="2026.2.0" date="2026-02-03" />
+    <release version="2026.1.3" date="2026-01-30" />
+    <release version="2026.1.3" date="2026-01-24" />
+    <release version="2026.1.2" date="2026-01-15" />
+    <release version="2026.1.1" date="2026-01-12" />
+    <release version="2026.1.0" date="2026-01-11" />
+    <release version="2025.12.6" date="2025-12-31" />
+    <release version="2025.12.4" date="2025-12-23" />
+    <release version="2025.12.4" date="2025-12-20" />
+    <release version="2025.12.4" date="2025-12-20" />
+    <release version="2025.12.3" date="2025-12-16" />
+    <release version="2025.12.3" date="2025-12-16" />
+    <release version="2025.12.3" date="2025-12-16" />
+    <release version="2025.12.2" date="2025-12-13" />
+    <release version="2025.12.2" date="2025-12-12" />
+    <release version="2025.12.2" date="2025-12-11" />
+    <release version="2025.12.2" date="2025-12-10" />
+    <release version="2025.12.2" date="2025-12-09" />
+    <release version="2025.12.2" date="2025-12-08" />
+    <release version="2025.12.2" date="2025-12-07" />
+    <release version="2025.12.2" date="2025-12-06" />
+    <release version="2025.12.2" date="2025-12-05" />
+    <release version="2025.12.0" date="2025-12-03" />
   </releases>
-  <content_rating type="oars-1.1"/>
+  <content_rating type="oars-1.1" />
   <screenshots>
-   <screenshot type="default">
-   <image>https://fonts.atipra.in/fontrapak/screenshot1.png</image>
-   <caption>FontraPak main interface</caption>
-   </screenshot>
+    <screenshot type="default">
+      <caption>Main application interface on Linux (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_02_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Main application interface on Linux (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_02_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_03_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_03_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Font export and build configuration</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_04_export.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_01_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_01_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Fontra running on macOS</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_00_macos.png</image>
+    </screenshot>
   </screenshots>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
 </component>
-

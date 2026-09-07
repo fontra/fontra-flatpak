@@ -28,8 +28,10 @@ jobs:
           RELEASE_DATA=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest)
           VERSION=$(echo "$RELEASE_DATA" | jq -r .tag_name)
           ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPak-Ubuntu.tgz") | .browser_download_url')
+          RELEASE_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at | split("T")[0]')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
+          echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
 
       - name: Download and calculate SHA256
         id: calculate-sha
@@ -46,12 +48,74 @@ jobs:
           sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPak-Ubuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPak-Ubuntu.tgz|" ${{ env.APP_ID }}.yml
           sed -i "s|sha256: .*|sha256: ${SHA256}|" ${{ env.APP_ID }}.yml
 
-      - name: Update metainfo.xml with new release
+      - name: Update metainfo.xml with new release notes
         run: |
-          VERSION="${{ steps.latest-release.outputs.version }}"
-          VERSION_CLEAN=$(echo $VERSION | sed 's/^v//')
-          DATE=$(date +%Y-%m-%d)
-          sed -i "/<releases>/a\    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\"/>" ${{ env.APP_ID }}.metainfo.xml
+          export VERSION="${{ steps.latest-release.outputs.version }}"
+          export VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+          export RELEASE_DATE="${{ steps.latest-release.outputs.release_date }}"
+
+          # Fetch raw body
+          RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
+
+          # Format Markdown to simple XML description tags
+          export FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
+            BEGIN { in_list = 0 }
+            /^(###?|[A-Za-z]+:?)/ {
+              if (in_list) { print "        </ul>"; in_list = 0 }
+              gsub(/^(###? ?|\*\*|\*\*)/, "")
+              print "        <p>" $0 "</p>"
+              next
+            }
+            /^[-*]/ {
+              if (!in_list) { print "        <ul>"; in_list = 1 }
+              gsub(/^[-*] /, "")
+              gsub(/&/, "&amp;")
+              gsub(/</, "&lt;")
+              gsub(/>/, "&gt;")
+              gsub(/\[([^\]]+)\]\([^)]+\)/, "\\1")
+              print "          <li>" $0 "</li>"
+              next
+            }
+            END { if (in_list) print "        </ul>" }
+          ')
+
+          python3 -c '
+          import os
+          import xml.etree.ElementTree as ET
+
+          app_id = os.environ.get("APP_ID", "xyz.fontra.FontraPak")
+          file_path = f"{app_id}.metainfo.xml"
+          version = os.environ.get("VERSION_CLEAN", "")
+          date = os.environ.get("RELEASE_DATE", "")
+          notes = os.environ.get("FORMATTED_NOTES", "")
+
+          tree = ET.parse(file_path)
+          root = tree.getroot()
+          releases = root.find("releases")
+
+          # Remove existing release entry with matching version to prevent duplicates
+          for r in list(releases.findall("release")):
+              if r.get("version") == version:
+                  releases.remove(r)
+
+          # Build new release element
+          new_release = ET.Element("release", {"version": version, "date": date})
+          desc = ET.Element("description")
+
+          try:
+              desc_tree = ET.fromstring(f"<root>{notes}</root>")
+              for child in desc_tree:
+                  desc.append(child)
+          except Exception:
+              p = ET.Element("p")
+              p.text = f"Release {version}"
+              desc.append(p)
+
+          new_release.append(desc)
+          releases.insert(0, new_release)
+
+          ET.indent(tree, space="  ")
+          tree.write(file_path, encoding="utf-8", xml_declaration=True)'
 
       - name: Commit and push changes
         run: |
@@ -78,26 +142,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v7
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          trust_level: 5
-
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           manifest-path: ${{ env.APP_ID }}.yml
           bundle: ${{ env.APP_ID }}.flatpak
           branch: ${{ github.ref_name }}
-          gpg-sign: ${{ steps.import_gpg.outputs.keyid }}
           upload-artifact: true
           cache-key: flatpak-builder-${{ github.sha }}
 
       - name: Generate repository summary
         run: |
-          flatpak build-update-repo --gpg-sign=${{ steps.import_gpg.outputs.keyid }} --generate-static-deltas --prune repo/
+          flatpak build-update-repo --generate-static-deltas --prune repo/
 
       - name: Upload OSTree repository
         uses: actions/upload-artifact@v7
