@@ -25,7 +25,7 @@ flatpak update xyz.fontra.FontraPak
 ```bash
 flatpak run xyz.fontra.FontraPak
 ```
-* Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="48">
+* Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
 
 ### Known Issues 
  The flatpak is reported to be working slowly in some distros like Debian Trixie where the base Ubuntu binary is working fine. We are currently investigating the issue.
