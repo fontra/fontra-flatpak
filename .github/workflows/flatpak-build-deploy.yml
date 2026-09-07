@@ -28,8 +28,10 @@ jobs:
           RELEASE_DATA=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest)
           VERSION=$(echo "$RELEASE_DATA" | jq -r .tag_name)
           ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="FontraPak-Ubuntu.tgz") | .browser_download_url')
+          RELEASE_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at | split("T")[0]')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "asset_url=$ASSET_URL" >> $GITHUB_OUTPUT
+          echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
 
       - name: Download and calculate SHA256
         id: calculate-sha
@@ -50,7 +52,7 @@ jobs:
         run: |
           export VERSION="${{ steps.latest-release.outputs.version }}"
           export VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
-          export RELEASE_DATE=$(date +%Y-%m-%d)
+          export RELEASE_DATE="${{ steps.latest-release.outputs.release_date }}"
 
           # Fetch raw body
           RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
