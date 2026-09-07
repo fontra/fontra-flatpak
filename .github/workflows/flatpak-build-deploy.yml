@@ -52,10 +52,10 @@ jobs:
           VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
           DATE=$(date +%Y-%m-%d)
 
-          # 1. Fetch release body from GitHub API
+          # Fetch markdown release body
           RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
 
-          # 2. Convert Markdown to AppStream XML structure
+          # Convert Markdown body to AppStream XML structure
           FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
             BEGIN { in_list = 0 }
             /^(###?|[A-Za-z]+:?)/ {
@@ -70,22 +70,45 @@ jobs:
               gsub(/&/, "&amp;")
               gsub(/</, "&lt;")
               gsub(/>/, "&gt;")
-              gsub(/\[([^\]]+)\]\([^)]+\)/, "\\1") # Strip markdown links
+              gsub(/\[([^\]]+)\]\([^)]+\)/, "\\1")
               print "          <li>" $0 "</li>"
               next
             }
             END { if (in_list) print "        </ul>" }
           ')
 
-          # 3. Construct the release block
-          RELEASE_BLOCK="    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\">\n      <description>\n${FORMATTED_NOTES}\n      </description>\n    </release>"
-          RELEASE_BLOCK_ESCAPED=$(echo "$RELEASE_BLOCK" | sed ':a;N;$!ba;s/\n/\\n/g')
+          # Use Python to cleanly insert/replace the release element without duplication
+          python3 -c "
+          import xml.etree.ElementTree as ET
 
-          # 4. Remove existing duplicate line if version is already listed
-          sed -i "/<release version=\"${VERSION_CLEAN}\"/d" ${{ env.APP_ID }}.metainfo.xml
+          file_path = '${{ env.APP_ID }}.metainfo.xml'
+          tree = ET.parse(file_path)
+          root = tree.getroot()
+          releases = root.find('releases')
 
-          # 5. Insert updated release block at the top of <releases>
-          sed -i "/<releases>/a\\${RELEASE_BLOCK_ESCAPED}" ${{ env.APP_ID }}.metainfo.xml
+          version = '${VERSION_CLEAN}'
+          date = '${DATE}'
+          notes = '''${FORMATTED_NOTES}'''
+
+          # Remove existing release element with the same version if present
+          for r in releases.findall('release'):
+              if r.get('version') == version:
+                  releases.remove(r)
+
+          # Build new release node
+          new_release = ET.Element('release', {'version': version, 'date': date})
+          desc = ET.Element('description')
+
+          # Inject pre-formatted HTML description tags
+          desc_tree = ET.fromstring(f'<root>{notes}</root>')
+          for child in desc_tree:
+              desc.append(child)
+
+          new_release.append(desc)
+          releases.insert(0, new_release)
+
+          ET.indent(tree, space='  ')
+          tree.write(file_path, encoding='utf-8', xml_declaration=True)"
 
       - name: Commit and push changes
         run: |
