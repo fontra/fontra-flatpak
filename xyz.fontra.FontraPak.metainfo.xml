@@ -100,8 +100,36 @@
   <content_rating type="oars-1.1" />
   <screenshots>
     <screenshot type="default">
-      <image>https://fonts.atipra.in/fontrapak/screenshot1.png</image>
-      <caption>FontraPak main interface</caption>
+      <caption>Main application interface on Linux (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_02_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Main application interface on Linux (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_02_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_03_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_03_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Font export and build configuration</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_04_export.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_01_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_01_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Fontra running on macOS</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/main/screenshots/screenshot_00_macos.png</image>
     </screenshot>
   </screenshots>
   <metadata_license>CC0-1.0</metadata_license>
