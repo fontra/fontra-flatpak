@@ -46,12 +46,45 @@ jobs:
           sed -i "s|url: https://github.com/fontra/fontra-pak/releases/download/[^/]*/FontraPak-Ubuntu.tgz|url: https://github.com/fontra/fontra-pak/releases/download/${VERSION}/FontraPak-Ubuntu.tgz|" ${{ env.APP_ID }}.yml
           sed -i "s|sha256: .*|sha256: ${SHA256}|" ${{ env.APP_ID }}.yml
 
-      - name: Update metainfo.xml with new release
+      - name: Update metainfo.xml with new release notes
         run: |
           VERSION="${{ steps.latest-release.outputs.version }}"
-          VERSION_CLEAN=$(echo $VERSION | sed 's/^v//')
+          VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
           DATE=$(date +%Y-%m-%d)
-          sed -i "/<releases>/a\    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\"/>" ${{ env.APP_ID }}.metainfo.xml
+
+          # 1. Fetch release body Markdown from GitHub API
+          RAW_BODY=$(curl -s https://api.github.com/repos/fontra/fontra-pak/releases/latest | jq -r '.body')
+
+          # 2. Convert Markdown headers and bullet points to AppStream XML
+          FORMATTED_NOTES=$(echo "$RAW_BODY" | awk '
+            BEGIN { in_list = 0 }
+            /^(###?|[A-Za-z]+:?)/ {
+              if (in_list) { print "        </ul>"; in_list = 0 }
+              gsub(/^(###? ?|\*\*|\*\*)/, "")
+              print "        <p>" $0 "</p>"
+              next
+            }
+            /^[-*]/ {
+              if (!in_list) { print "        <ul>"; in_list = 1 }
+              gsub(/^[-*] /, "")
+              # Escape special XML characters
+              gsub(/&/, "&amp;")
+              gsub(/</, "&lt;")
+              gsub(/>/, "&gt;")
+              print "          <li>" $0 "</li>"
+              next
+            }
+            END { if (in_list) print "        </ul>" }
+          ')
+
+          # 3. Construct full release XML block
+          RELEASE_BLOCK="    <release version=\"${VERSION_CLEAN}\" date=\"${DATE}\">\n      <description>\n${FORMATTED_NOTES}\n      </description>\n    </release>"
+
+          # 4. Escape newline characters for sed insertion
+          RELEASE_BLOCK_ESCAPED=$(echo "$RELEASE_BLOCK" | sed ':a;N;$!ba;s/\n/\\n/g')
+
+          # 5. Prepend the new release block inside the <releases> tag
+          sed -i "/<releases>/a\\${RELEASE_BLOCK_ESCAPED}" ${{ env.APP_ID }}.metainfo.xml
 
       - name: Commit and push changes
         run: |
