@@ -77,6 +77,8 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Import GPG key
         id: import_gpg
