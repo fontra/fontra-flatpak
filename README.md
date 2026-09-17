@@ -43,6 +43,12 @@ flatpak run xyz.fontra.FontraPak
 
 ### Known Issues 
 
-The flatpak is reported to be working slowly in some distros like Debian Trixie where the base Ubuntu binary is working fine. We are currently investigating the issue.
+* **GNOME Wayland Titlebar Decorations:** On GNOME Wayland sessions, window titlebar controls (close, minimize, maximize) may be missing or lack native Adwaita styling depending on your distribution and GNOME version. See [fontra-pak#271](https://github.com/fontra/fontra-pak/issues/271).
+* **Performance on Debian Trixie:** The Flatpak build has been reported to run slower on some distributions like Debian 13 (Trixie) compared to the base standalone binary[cite: 1]. We are currently investigating the cause[cite: 1].
 
-For any other problem, please [open an Issue](https://github.com/fontra/fontra-flatpak/issues)
+---
+
+### Reporting Issues
+
+* **Flatpak packaging or runtime issues:** Open an issue on [fontra-flatpak/issues](https://github.com/fontra/fontra-flatpak/issues).
+* **General Linux bugs or application crashes:** Open an issue on [fontra-pak/issues](https://github.com/fontra/fontra-pak/issues).
