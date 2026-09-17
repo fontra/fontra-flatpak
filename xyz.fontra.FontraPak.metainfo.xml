@@ -3,9 +3,8 @@
   <id>xyz.fontra.FontraPak</id>
   <name>FontraPak</name>
   <summary>Standalone desktop build of the Fontra font editor</summary>
-  <developer id="fontra.xyz">
-    <name>Fontra Project</name>
-    <url>https://fontra.xyz</url>
+  <developer id="xyz.fontra">
+    <name>Just van Rossum</name>
   </developer>
   <description>
     <p>
