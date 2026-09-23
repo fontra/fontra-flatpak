@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <component type="desktop">
   <id>xyz.fontra.FontraPak</id>
   <name>FontraPak</name>
   <summary>Standalone desktop build of the Fontra font editor</summary>
-  <developer id="fontra.xyz">
-  <name>Fontra Project</name>
-  <url>https://fontra.xyz</url>
+  <developer id="xyz.fontra">
+    <name>Just van Rossum</name>
   </developer>
   <description>
     <p>
@@ -14,11 +13,23 @@
     <p>
       Fontra focuses on variable font technology and advanced workflows for large font projects such as CJK, offering deeper variable font integration than traditional editors. As a standalone package, FontraPak allows easy installation and use outside the browser, bringing the full editing environment to your desktop.
     </p>
+    <p>Features include:</p>
+    <ul>
+      <li>Full read and write support for .ufo, .designspace, .fontra, and .rcjk formats</li>
+      <li>Partial read and write support for .glyphs and .glyphspackage files</li>
+      <li>Read-only import for .ttf, .otf, .woff, .woff2, and .ttx files</li>
+      <li>Native variable font design, multi-axis interpolation, and axis management</li>
+      <li>Modern vector editing with component support and non-destructive path operations</li>
+      <li>Real-time text shaping engine and OpenType feature testing</li>
+    </ul>
   </description>
-  <url type="homepage">https://github.com/fontra/fontrapak</url>
+  <url type="homepage">https://fontra.xyz/</url>
+  <url type="bugtracker">https://github.com/fontra/fontra-pak/issues</url>
+  <url type="help">https://docs.fontra.xyz/</url>
+  <url type="vcs-browser">https://github.com/fontra/fontra-flatpak</url>
   <categories>
     <category>Graphics</category>
-    <category>Development</category> 
+    <category>Development</category>
   </categories>
   <launchable type="desktop-id">xyz.fontra.FontraPak.desktop</launchable>
   <releases>
@@ -72,12 +83,40 @@
     <release version="2025.12.2" date="2025-12-05"/>
     <release version="2025.12.0" date="2025-12-03"/>
   </releases>
-  <content_rating type="oars-1.1"/>
+  <content_rating type="oars-1.1" />
   <screenshots>
-   <screenshot type="default">
-   <image>https://fonts.atipra.in/fontrapak/screenshot1.png</image>
-   <caption>FontraPak main interface</caption>
-   </screenshot>
+    <screenshot type="default">
+      <caption>Main application interface on Linux (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_02_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Main application interface on Linux (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_02_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_03_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Text shaping and OpenType features editor (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_03_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Font export and build configuration</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_04_export.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Dark)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_01_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Open files dialog (Light)</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_01_light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Fontra running on macOS</caption>
+      <image type="source">https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_00_macos.png</image>
+    </screenshot>
   </screenshots>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
