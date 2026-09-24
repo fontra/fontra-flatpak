@@ -1,7 +1,7 @@
 # Fontra Flatpak
 ## Flatpak repository for Fontra
 
-![Fontrapak Screenshot](https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_02_dark.png)
+![Fontrapak Screenshot](screenshots/screenshot_02_dark.png)
 
 ### Key Features
 
