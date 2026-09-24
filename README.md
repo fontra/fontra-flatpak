@@ -1,7 +1,7 @@
 # Fontra Flatpak
 ## Flatpak repository for Fontra
 
-![Fontrapak Screenshot](https://raw.githubusercontent.com/t4rik/fontra-flatpak/feat/metadata/screenshots/screenshot_02_dark.png)
+![Fontrapak Screenshot](screenshots/screenshot_02_dark.png)
 
 ### Key Features
 
@@ -44,7 +44,7 @@ flatpak run xyz.fontra.FontraPak
 ### Known Issues 
 
 * **GNOME Wayland Titlebar Decorations:** On GNOME Wayland sessions, window titlebar controls (close, minimize, maximize) may be missing or lack native Adwaita styling depending on your distribution and GNOME version. See [fontra-pak#271](https://github.com/fontra/fontra-pak/issues/271).
-* **Performance on Debian Trixie:** The Flatpak build has been reported to run slower on some distributions like Debian 13 (Trixie) compared to the base standalone binary[cite: 1]. We are currently investigating the cause[cite: 1].
+* **Performance on Debian Trixie:** The Flatpak build has been reported to run slower on some distributions like Debian 13 (Trixie) compared to the base standalone binary. We are currently investigating the cause.
 
 ---
 
