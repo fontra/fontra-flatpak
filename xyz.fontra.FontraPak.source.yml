@@ -1,0 +1,114 @@
+id: xyz.fontra.FontraPak
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node24
+
+command: fontrapak
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --share=network
+  - --filesystem=host
+
+modules:
+
+  # ------------------------------------------------------------
+  # Fontra
+  # ------------------------------------------------------------
+
+  - name: fontra
+    buildsystem: simple
+
+    build-options:
+      build-args:
+        - --share=network
+      append-path: /usr/lib/sdk/node24/bin
+
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra.git
+        commit: cc0a3b40bcd9860d8b6382df1faf6122ec306a5b
+
+    build-commands:
+      - python3 -m pip install --prefix=/app .
+
+  # ------------------------------------------------------------
+  # Fontra Pak
+  # ------------------------------------------------------------
+
+  - name: fontrapak
+    buildsystem: simple
+
+    build-options:
+      build-args:
+        - --share=network
+      append-path: /usr/lib/sdk/node24/bin
+
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra-pak.git
+        commit: 073d8cf920acd9c3d17bdedd30daecbede65147a
+
+      - type: file
+        path: data/icons/xyz.fontra.FontraPak.svg
+        dest-filename: xyz.fontra.FontraPak.svg
+
+      - type: file
+        path: xyz.fontra.FontraPak.desktop
+        dest-filename: xyz.fontra.FontraPak.desktop
+
+      - type: file
+        path: xyz.fontra.FontraPak.metainfo.xml
+        dest-filename: xyz.fontra.FontraPak.metainfo.xml
+
+      - type: file
+        path: fontrapak.sh
+
+    build-commands:
+
+      # Fontra is already built from source above.
+      # Remove all Fontra/Fontra Pak VCS requirements so pip
+      # cannot replace the source-built Fontra with PyPI fontra.
+      - sed -i '/^git+https:\/\/github.com\/fontra\/fontra.git$/d' requirements.txt
+      - sed -i '/^git+https:\/\/github.com\/fontra\/fontra-compile.git$/d' requirements.txt
+      - sed -i '/^git+https:\/\/github.com\/fontra\/fontra-rcjk.git$/d' requirements.txt
+      - sed -i '/^git+https:\/\/github.com\/fontra\/fontra-glyphs.git$/d' requirements.txt
+
+      # The Freedesktop SDK already provides setuptools.
+      # Its copy lives in /usr and cannot be uninstalled.
+      - sed -i '/^setuptools==84.0.0$/d' requirements.txt
+      - sed -i '/^setuptools==84.0.0$/d' requirements-dev.txt
+
+      # Install the Fontra Pak plugins without dependencies.
+      # Fontra itself must remain the source-built 2026.9.0 version.
+      - python3 -m pip install --prefix=/app --no-deps git+https://github.com/fontra/fontra-compile.git
+      - python3 -m pip install --prefix=/app --no-deps git+https://github.com/fontra/fontra-rcjk.git
+      - python3 -m pip install --prefix=/app --no-deps git+https://github.com/fontra/fontra-glyphs.git
+
+      # Dependencies required by fontra-compile/fontra-glyphs.
+      - python3 -m pip install --prefix=/app cffsubr fontc fontmake glyphslib openstep-plist lxml compreffor
+
+      # Install Fontra Pak's remaining runtime dependencies.
+      - python3 -m pip install --prefix=/app -r requirements.txt
+
+      # Install PyInstaller and its development dependencies.
+      # setuptools from the SDK is intentionally retained.
+      - python3 -m pip install --prefix=/app -r requirements-dev.txt
+
+      # Build the self-contained Fontra Pak executable.
+      - pyinstaller FontraPak.spec -y
+
+      # Install executable and launcher.
+      - install -Dm755 dist/fontrapak /app/bin/fontrapak-bin
+      - install -Dm755 fontrapak.sh /app/bin/fontrapak
+
+      # Install desktop integration.
+      - install -Dm644 xyz.fontra.FontraPak.svg /app/share/icons/hicolor/scalable/apps/xyz.fontra.FontraPak.svg
+      - install -Dm644 xyz.fontra.FontraPak.desktop /app/share/applications/xyz.fontra.FontraPak.desktop
+      - install -Dm644 xyz.fontra.FontraPak.metainfo.xml /app/share/metainfo/xyz.fontra.FontraPak.metainfo.xml

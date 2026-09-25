@@ -1,0 +1,52 @@
+name: Build Flatpak
+
+on:
+  pull_request:
+    paths:
+      - "xyz.fontra.FontraPak.source.yml"
+      - ".github/workflows/build-flatpak.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Flatpak tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            flatpak \
+            flatpak-builder \
+            python3 \
+            jq \
+            curl
+
+      - name: Add Flathub
+        run: |
+          flatpak remote-add --if-not-exists \
+            --user \
+            flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Install Freedesktop SDK
+        run: |
+          flatpak install -y \
+            --user \
+            flathub \
+            org.freedesktop.Sdk/x86_64/25.08 \
+            org.freedesktop.Sdk.Extension.node24/x86_64/25.08
+
+      - name: Build source version
+        run: |
+          flatpak-builder \
+            --user \
+            --force-clean \
+            --disable-rofiles-fuse \
+            --repo=repo \
+            --ccache \
+            build-dir \
+            xyz.fontra.FontraPak.source.yml
