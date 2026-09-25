@@ -1,0 +1,206 @@
+name: Update FontraPak
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check latest FontraPak release
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          release_json="$(curl -fsSL \
+            https://api.github.com/repos/fontra/fontra-pak/releases/latest)"
+
+          version="$(jq -r '.tag_name' <<< "$release_json")"
+
+          if [[ -z "$version" || "$version" == "null" ]]; then
+            echo "Could not determine latest FontraPak release"
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Latest FontraPak release: $version"
+
+      - name: Find Fontra commit
+        id: fontra
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          commit="$(
+            git ls-remote \
+              --tags \
+              https://github.com/fontra/fontra.git \
+              "refs/tags/$VERSION" |
+            awk '{print $1}'
+          )"
+
+          if [[ -z "$commit" ]]; then
+            echo "Could not find Fontra tag: $VERSION"
+            exit 1
+          fi
+
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Fontra $VERSION: $commit"
+
+      - name: Find FontraPak commit
+        id: fontrapak
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          commit="$(
+            git ls-remote \
+              --tags \
+              https://github.com/fontra/fontra-pak.git \
+              "refs/tags/$VERSION" |
+            awk '{print $1}'
+          )"
+
+          if [[ -z "$commit" ]]; then
+            echo "Could not find FontraPak tag: $VERSION"
+            exit 1
+          fi
+
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "FontraPak $VERSION: $commit"
+
+      - name: Update source manifest
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          FONTRA_COMMIT: ${{ steps.fontra.outputs.commit }}
+          FONTRAPAK_COMMIT: ${{ steps.fontrapak.outputs.commit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          file="xyz.fontra.FontraPak.source.yml"
+
+          python3 - "$file" "$FONTRA_COMMIT" "$FONTRAPAK_COMMIT" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          fontra_commit = sys.argv[2]
+          fontrapak_commit = sys.argv[3]
+
+          text = path.read_text()
+
+          # Update the commit belonging to fontra.git.
+          text, count1 = re.subn(
+              r'(- type: git\s*\n'
+              r'\s+url: https://github\.com/fontra/fontra\.git\s*\n'
+              r'\s+commit: )[0-9a-f]+',
+              rf'\g<1>{fontra_commit}',
+              text,
+              count=1,
+          )
+
+          # Update the commit belonging to fontra-pak.git.
+          text, count2 = re.subn(
+              r'(- type: git\s*\n'
+              r'\s+url: https://github\.com/fontra/fontra-pak\.git\s*\n'
+              r'\s+commit: )[0-9a-f]+',
+              rf'\g<1>{fontrapak_commit}',
+              text,
+              count=1,
+          )
+
+          if count1 != 1:
+              raise SystemExit("Could not update Fontra commit")
+
+          if count2 != 1:
+              raise SystemExit("Could not update FontraPak commit")
+
+          path.write_text(text)
+          PY
+
+          echo "Updated $file for $VERSION"
+
+      - name: Check for changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet -- xyz.fontra.FontraPak.source.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Manifest is already up to date."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff -- xyz.fontra.FontraPak.source.yml
+          fi
+
+      - name: Create update branch
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="update/fontrapak-${VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git switch -c "$branch"
+
+          git add xyz.fontra.FontraPak.source.yml
+          git commit -m "Update FontraPak to ${VERSION}"
+          git push --set-upstream origin "$branch"
+
+          echo "BRANCH=$branch" >> "$GITHUB_ENV"
+
+      - name: Create pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr create \
+            --title "Update FontraPak to ${VERSION}" \
+            --body "$(cat <<EOF
+          ## FontraPak ${VERSION}
+
+          Updates the source-build manifest to the Fontra and FontraPak
+          commits corresponding to ${VERSION}.
+
+          ### Updated
+
+          - Fontra
+          - FontraPak
+
+          The existing prebuilt manifest
+          \`xyz.fontra.FontraPak.yml\` is intentionally unchanged.
+
+          The source-build manifest is:
+
+          \`xyz.fontra.FontraPak.source.yml\`
+          EOF
+          )" \
+            --head "$BRANCH" \
+            --base "${{ github.event.repository.default_branch }}"
