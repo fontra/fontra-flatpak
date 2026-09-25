@@ -32,11 +32,12 @@ jobs:
             flathub \
             https://dl.flathub.org/repo/flathub.flatpakrepo
 
-      - name: Install Freedesktop SDK
+      - name: Install Freedesktop runtime and SDK
         run: |
           flatpak install -y \
             --user \
             flathub \
+            org.freedesktop.Platform/x86_64/25.08 \
             org.freedesktop.Sdk/x86_64/25.08 \
             org.freedesktop.Sdk.Extension.node24/x86_64/25.08
 
