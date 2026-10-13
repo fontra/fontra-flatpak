@@ -1,11 +1,10 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=FontraPak
 Comment=Browser based Cross Platform Variable First Font Editor
 Terminal=false
 Type=Application
-Categories=Development;
-Keywords=fonteditor;graphics;
+Categories=Graphics;2DGraphics;Development;
+Keywords=font;editor;type design;typography;variable fonts;
 StartupNotify=true
 Icon=xyz.fontra.FontraPak
 Exec=fontrapak %U
