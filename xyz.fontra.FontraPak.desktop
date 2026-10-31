@@ -8,4 +8,5 @@ Categories=Development;
 Keywords=fonteditor;graphics;
 StartupNotify=true
 Icon=xyz.fontra.FontraPak
-Exec=fontrapak %U
+Exec=fontrapak %F
+MimeType=font/ttf;font/otf;font/woff;font/woff2;application/x-designspace+xml;application/x-glyphs;
