@@ -41,8 +41,6 @@ flatpak run xyz.fontra.FontraPak
 ```
 * Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
 
-### Known Issues 
-
 ### Known Issues
 
 **Performance:** The Flatpak build uses the Ubuntu 22.04 binary, so it does not run as fast as a Flatpak built from source. Planned work on this is tracked in the [Roadmap to Fontra Flatpak](https://github.com/fontra/fontra-flatpak/issues/1).
