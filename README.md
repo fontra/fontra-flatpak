@@ -41,6 +41,29 @@ flatpak run xyz.fontra.FontraPak
 ```
 * Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
 
+### Developer
+
+#### Building the Flatpak
+
+Requires `flatpak-builder`, plus the Freedesktop runtime and SDK 25.08:
+
+```bash
+flatpak install flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+flatpak-builder --user --install --force-clean build-dir xyz.fontra.FontraPak.yml
+```
+
+Run the app from the build directory without installing it:
+
+```bash
+flatpak-builder --run build-dir xyz.fontra.FontraPak.yml fontrapak
+```
+
+#### Notes
+
+* The manifest packages the prebuilt Ubuntu release archive (`FontraPak-Ubuntu.tgz`), not a build from source.
+* The desktop entry, MIME definitions (`xyz.fontra.FontraPak.xml`), and metainfo are installed from this repository.
+* When you bump the release, update both the `url` and `sha256` for the archive in `xyz.fontra.FontraPak.yml`.
+
 ### Known Issues
 
 **Performance:** The Flatpak build uses the Ubuntu 22.04 binary, so it does not run as fast as a Flatpak built from source. Planned work on this is tracked in the [Roadmap to Fontra Flatpak](https://github.com/fontra/fontra-flatpak/issues/1).
