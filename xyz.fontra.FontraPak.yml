@@ -1,51 +1,203 @@
 id: xyz.fontra.FontraPak
-runtime: org.freedesktop.Platform
-runtime-version: '25.08'
-sdk: org.freedesktop.Sdk
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
 command: fontrapak
-
+base: com.riverbankcomputing.PyQt.BaseApp
+base-version: '6.11'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node24
+  - org.freedesktop.Sdk.Extension.rust-stable
 finish-args:
   - --share=ipc
-  - --socket=x11
-  - --socket=wayland
-  - --device=dri
   - --share=network
-  - --filesystem=host
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --filesystem=home
+cleanup-commands:
+  - /app/cleanup-BaseApp.sh
+  - for p in hatchling hatch_vcs setuptools_scm vcs_versioning setuptools_rust scikit_build setuptools_git_ls_files pkgconfig pybind11 maturin; do rm -rf /app/lib/python3*/site-packages/$p /app/lib/python3*/site-packages/$p-*.dist-info; done
+  - rm -rf /app/bin/maturin /app/bin/pybind11-config /app/bin/hatchling /app/include/site /app/share/cmake/pybind11 /app/share/pkgconfig/pybind11.pc
+build-options:
+  env:
+    BASEAPP_REMOVE_WEBENGINE: '1'
 
 modules:
-  - name: fontrapak
+  # Build backends for the sdists below. They are removed again in cleanup-commands.
+  - python3-build-tools.yaml
+
+  # Rust-based build backend, needed by watchfiles. Built from source.
+  - name: python3-maturin
     buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/python3-maturin/cargo
+        CARGO_NET_OFFLINE: 'true'
+    build-commands:
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
     sources:
       - type: archive
-        url: https://github.com/fontra/fontra-pak/releases/download/2026.10.2/FontraPak-Ubuntu.tgz
-        sha256: 5ad4c93fb14af822b367ba6a58f7520c7506f4f1641881383b738f973dd5c995
-        strip-components: 0
+        url: https://files.pythonhosted.org/packages/b9/c8/22e5e21b2679c9bce6415ca578034ca2cc9316be0642ae21e051a2d5198c/maturin-1.15.0.tar.gz
+        sha256: 94b26cc8e8aba61a5f2099715fe640e18c5f678e9a500408b38761263954228a
+      - cargo-sources-maturin.json
+
+  # Rust extension, needed by Fontra's file watcher. Built from source.
+  - name: python3-watchfiles
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/python3-watchfiles/cargo
+        CARGO_NET_OFFLINE: 'true'
+    build-commands:
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+    sources:
+      - type: archive
+        url: https://files.pythonhosted.org/packages/b3/68/e6aa0b77d217b31f8f486ec0cdfe5e00e6e38dc0be657e7d85819b9faf0a/watchfiles-1.3.0.tar.gz
+        sha256: 99aee4a07847c06820765fd7b1b49ceac4f3f711ccb7d104655a33231de1c207
+      - cargo-sources-watchfiles.json
+
+  # Skia cannot be built offline (its build script downloads gn), so this one
+  # package is installed from the upstream abi3 wheel.
+  - name: python3-skia-pathops
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --no-deps --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} skia-pathops
+    sources:
       - type: file
-        path: data/icons/xyz.fontra.FontraPak.svg
-        dest-filename: xyz.fontra.FontraPak.svg
+        url: https://files.pythonhosted.org/packages/b4/20/711d733b252696aedd78175e0f60acd42299de680d5a50a2750b96578841/skia_pathops-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+        sha256: d94c18a60b1e56910240a65dcc841cca37067f6432a4881d20baff17b6d77915
+        only-arches:
+          - x86_64
       - type: file
-        path: xyz.fontra.FontraPak.desktop
-        dest-filename: xyz.fontra.FontraPak.desktop
+        url: https://files.pythonhosted.org/packages/95/47/bccbdb7ee12bbcc43c1051f9fd6933d16e3ffc8f20263155bd03709bde9e/skia_pathops-0.9.2-cp310-abi3-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+        sha256: 70b28883f209a0df84da14e980e7a07c55ed93b913955694d90ddef2f29a261b
+        only-arches:
+          - aarch64
+
+  # cffsubr builds the whole of afdko through scikit-build. Notes on the offline setup:
+  # - the sdist has no git metadata, so setuptools_scm gets a pinned version
+  # - setup_requires names cmake and ninja as Python packages; the SDK tools are
+  #   used instead, so empty dist-info stubs satisfy the check
+  # - afdko clones ANTLR4 at configure time; a zip made from the pinned commit is
+  #   passed in instead
+  # - cffsubr's setup.py needs setuptools <= 80.9 (copy_file lost dry_run in 81),
+  #   which is only put on PYTHONPATH for this build and not installed
+  - name: python3-cffsubr
+    buildsystem: simple
+    build-options:
+      env:
+        PIP_NO_INDEX: '1'
+        SETUPTOOLS_SCM_PRETEND_VERSION: 0.4.0
+    build-commands:
+      - cd antlr4-src/runtime/Cpp && python3 -m zipfile -c ../../../antlr4-cpp-runtime.zip *
+      - pip3 install --no-index --no-deps --target=build-env ./setuptools-80.9.0-py3-none-any.whl
+      - mkdir -p build-env/cmake-3.31.0.dist-info build-env/ninja-1.11.1.dist-info
+      - 'printf "Metadata-Version: 2.1\nName: cmake\nVersion: 3.31.0\n" > build-env/cmake-3.31.0.dist-info/METADATA'
+      - 'printf "Metadata-Version: 2.1\nName: ninja\nVersion: 1.11.1\n" > build-env/ninja-1.11.1.dist-info/METADATA'
+      - PYTHONPATH=${PWD}/build-env SKBUILD_CONFIGURE_OPTIONS=-DANTLR4_ZIP_REPOSITORY=${PWD}/antlr4-cpp-runtime.zip pip3 install --verbose --no-index --no-deps --no-build-isolation --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} cffsubr
+    sources:
       - type: file
-        path: xyz.fontra.FontraPak.metainfo.xml
-        dest-filename: xyz.fontra.FontraPak.metainfo.xml
+        url: https://files.pythonhosted.org/packages/57/09/5987a51eeb193c700f48984502c4e7de863b2e55f3b91b66543d6f7b3b58/cffsubr-0.4.0.tar.gz
+        sha256: 2c321b6807bd95856d921ed9dce8506495cf49fc7a89a63cb942e8bece13addd
+      - type: file
+        url: https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl
+        sha256: 062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922
+      - type: git
+        url: https://github.com/antlr/antlr4.git
+        commit: df4d68c09cdef73e023b8838a8bc7ca4dff1d1de
+        dest: antlr4-src
+
+  # Runtime dependencies of Fontra, Fontra Pak and the Fontra plugins
+  - python3-deps.yaml
+
+  - name: fontra
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node24/bin
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: 2026.9.2
+        XDG_CACHE_HOME: /run/build/fontra/flatpak-node/cache
+        npm_config_cache: /run/build/fontra/flatpak-node/npm-cache
+        npm_config_offline: 'true'
+    build-commands:
+      # Upstream's lockfile has no resolved/integrity for many registry packages, so the
+      # offline cache could not be complete. package-lock-fontra.json is the same lockfile
+      # with those fields filled in from the npm registry.
+      - cp package-lock-fontra.json package-lock.json
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra.git
+        tag: 2026.9.2
+        commit: 0a83304daa7a31a958f328ca3a8865614d492c52
+      - type: file
+        path: package-lock-fontra.json
+      - node-sources-fontra.json
+
+  - name: fontra-compile
+    buildsystem: simple
+    build-options:
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: 2026.9.2
+    build-commands:
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra-compile.git
+        commit: e60e601d5aede9a8d745a777c0c1ccb671af4ecd
+
+  - name: fontra-glyphs
+    buildsystem: simple
+    build-options:
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: 2026.9.2
+    build-commands:
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra-glyphs.git
+        commit: cba554cd4b0e20fdf788f518b9774e0902ff553a
+
+  - name: fontra-rcjk
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node24/bin
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: 2026.9.2
+        XDG_CACHE_HOME: /run/build/fontra-rcjk/flatpak-node/cache
+        npm_config_cache: /run/build/fontra-rcjk/flatpak-node/npm-cache
+        npm_config_offline: 'true'
+    build-commands:
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra-rcjk.git
+        commit: bf0c69c1a8acde230ac927fec10d32a5335d5d3b
+      - node-sources-rcjk.json
+
+  - name: fontrapak
+    buildsystem: simple
+    build-commands:
+      - install -Dm644 FontraPakMain.py ${FLATPAK_DEST}/share/fontrapak/FontraPakMain.py
+      - install -Dm755 fontrapak.sh ${FLATPAK_DEST}/bin/fontrapak
+      - install -Dm644 xyz.fontra.FontraPak.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/xyz.fontra.FontraPak.svg
+      - install -Dm644 xyz.fontra.FontraPak.desktop ${FLATPAK_DEST}/share/applications/xyz.fontra.FontraPak.desktop
+      - install -Dm644 xyz.fontra.FontraPak.metainfo.xml ${FLATPAK_DEST}/share/metainfo/xyz.fontra.FontraPak.metainfo.xml
+      - install -Dm644 LICENSE ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}/LICENSE
+    sources:
+      - type: git
+        url: https://github.com/fontra/fontra-pak.git
+        tag: 2026.9.2
+        commit: 0db1f61c16e94a55750b28c9ccfeaf50a2ba677d
       - type: file
         path: fontrapak.sh
-
-
-    build-commands:
-      # Create bin directory
-      - install -d /app/bin
-      - chmod +x fontrapak.sh
-
-
-      # move and rename binary
-      - mv fontrapak /app/bin/fontrapak-bin
-      - chmod +x /app/bin/fontrapak-bin
-
-
-      # Install wrapper script, icon, metainfo and desktop file
-      - install -m755 fontrapak.sh /app/bin/fontrapak
-      - install -Dm644 xyz.fontra.FontraPak.svg /app/share/icons/hicolor/scalable/apps/xyz.fontra.FontraPak.svg
-      - install -Dm644 xyz.fontra.FontraPak.desktop /app/share/applications/xyz.fontra.FontraPak.desktop
-      - install -Dm644 xyz.fontra.FontraPak.metainfo.xml /app/share/metainfo/xyz.fontra.FontraPak.metainfo.xml
+      - type: file
+        path: data/icons/xyz.fontra.FontraPak.svg
+      - type: file
+        path: xyz.fontra.FontraPak.desktop
+      - type: file
+        path: xyz.fontra.FontraPak.metainfo.xml

@@ -1,0 +1,99 @@
+# Generated with flatpak-pip-generator (merged into one module), see regenerate-sources.sh
+name: python3-deps
+buildsystem: simple
+build-commands:
+  - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} aiohttp==3.14.3 cattrs "fonttools[woff,ufo,unicode]>=4.66.0" anyio pyyaml ufomerge pillow ufo2ft fontmake booleanOperations "glyphsLib>=6.14.0" psutil==7.2.2 certifi==2026.7.22 --no-build-isolation
+sources:
+  - type: file
+    url: https://files.pythonhosted.org/packages/71/43/1947f06babed6b3f1d7f38b0c767f52df66bfb2bc10b468c4a7de9eceff2/aiohappyeyeballs-2.7.1-py3-none-any.whl
+    sha256: 9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472
+  - type: file
+    url: https://files.pythonhosted.org/packages/58/d9/22ce5786ac0c1653ae8b6c23bded02c1686d11f0dbb45b31ce128e0df985/aiohttp-3.14.3.tar.gz
+    sha256: 9491196535a88924a60afd5b5f434b5b203b6cc616250878dbdb223a8f7844bc
+  - type: file
+    url: https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl
+    sha256: 053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e
+  - type: file
+    url: https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl
+    sha256: 6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101
+  - type: file
+    url: https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl
+    sha256: c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+  - type: file
+    url: https://files.pythonhosted.org/packages/52/50/9293f0e97f0029773c4b85c5058417aff8a19266f34a140c014b5e1bd887/booleanoperations-0.10.0-py3-none-any.whl
+    sha256: 7d2537ec0c3763214bcfa2981a2a70995eb7bec2f76c9fb9eacac30545ba5808
+  - type: file
+    url: https://files.pythonhosted.org/packages/f7/16/c92ca344d646e71a43b8bb353f0a6490d7f6e06210f8554c8f874e454285/brotli-1.2.0.tar.gz
+    sha256: e310f77e41941c13340a95976fe66a8a95b01e783d430eeaf7a2f87e0a57dd0a
+  - type: file
+    url: https://files.pythonhosted.org/packages/e8/cf/22794a399d99480486120e26e879ef008e21f5e85274c2ed591d568bb326/cattrs-26.2.1-py3-none-any.whl
+    sha256: a12aaa3453dc8f633a815293179f08b7421ed18d2575c459c3c736f840beac24
+  - type: file
+    url: https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl
+    sha256: 62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775
+  - type: file
+    url: https://files.pythonhosted.org/packages/67/77/57ce491ad29073f4b8cfa6226d8b7cba310327d71a7e7db4e2e000b08ed8/compreffor-0.6.0.tar.gz
+    sha256: 7ea034a50c59cc78732f1480040eac2bb36f826ce2eb607c3029b5d38ab11ba8
+  - type: file
+    url: https://files.pythonhosted.org/packages/07/c0/a74fc5a8c5a0e3982eb396f05e3f7155e6dd2469460ffec0868b06901f59/fontmake-3.12.1-py3-none-any.whl
+    sha256: 65ccaa87de8d9b80684b25c9ebd66acecc0d6070fa865fc4b344692d9cff8c6e
+  - type: file
+    url: https://files.pythonhosted.org/packages/ec/90/e5a24e71f4ce52ffe0cb01183b680b35755d168eefdf4dd18bb7f9e16968/fontmath-0.10.0-py2.py3-none-any.whl
+    sha256: d7042cd07dadcb8fc1da6f2635cee7112d1c5b2043e5ad43ed3da3a9083d614d
+  - type: file
+    url: https://files.pythonhosted.org/packages/f6/10/d45b74135d5d642cb3a4fb0a957c1613ef93de4c8548671dfc3a5bf38299/fonttools-4.66.1-py3-none-any.whl
+    sha256: 7234ae9e28db64273fbbfa72caebd0a97e3bdba6b05064114741b9539ef339d0
+  - type: file
+    url: https://files.pythonhosted.org/packages/9a/9a/e35b4a917281c0b8419d4207f4334c8e8c5dbf4f3f5f9ada73958d937dcc/frozenlist-1.8.0-py3-none-any.whl
+    sha256: 0c18a16eab41e82c295618a77502e17b195883241c563b00f0aa5106fc4eaa0d
+  - type: file
+    url: https://files.pythonhosted.org/packages/07/20/f59833a593b2cd0f18e20cbe88d799b7cc08e87db3ea1951273947b5d9c4/glyphslib-6.15.0-py3-none-any.whl
+    sha256: f8edc3aa49dee39a9154b824ea45cf7fc43c534d9daf98e06e0f99b1ecce5d1a
+  - type: file
+    url: https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl
+    sha256: ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c
+  - type: file
+    url: https://files.pythonhosted.org/packages/23/ad/28ecd7cb894d172f3c9c80a075eeeb2017ac62e3632cee05a5f9493547eb/lxml-6.1.3.tar.gz
+    sha256: 45222d94ddd511536f3b2f7d9deae3b2339b4ce0f075f1ca25703b07cad9dd21
+  - type: file
+    url: https://files.pythonhosted.org/packages/be/59/e26cb779be4c591d1a910f59d29aca9fba4de70349840a833beba2652371/multidict-6.9.1-py3-none-any.whl
+    sha256: 7bf6478188f4e47bf5686e8a33da4ae28bf43b1b2528d9ee144d28492bfac60b
+  - type: file
+    url: https://files.pythonhosted.org/packages/c6/c4/8ab312ec6060ba89c8c60f90e9cdecdf8f53d4a9b743293074a65708f7b0/openstep_plist-0.5.2.tar.gz
+    sha256: 2a0d70ff7a03cce64a727062b64bb2f5c9af9fd4a636aaa4339b6aaa2cf65195
+  - type: file
+    url: https://files.pythonhosted.org/packages/1c/3d/bb7fca845737cf9d7dbde16ed1843984665ff2e0a518f5db43e77ec540b9/pillow-12.3.0.tar.gz
+    sha256: 3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce
+  - type: file
+    url: https://files.pythonhosted.org/packages/f5/cd/785c64ed382f3f04201870267b02783f63b4678c2acfddc177a3ebcc2727/propcache-0.5.4-py3-none-any.whl
+    sha256: 62c60aec739ed00124573cce1178138fd690c7676352d67a37328c1cf51d7468
+  - type: file
+    url: https://files.pythonhosted.org/packages/aa/c6/d1ddf4abb55e93cebc4f2ed8b5d6dbad109ecb8d63748dd2b20ab5e57ebe/psutil-7.2.2.tar.gz
+    sha256: 0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372
+  - type: file
+    url: https://files.pythonhosted.org/packages/f6/21/3c06205bb407e1f79b73b7b4dfb3950bd9537c4f625a68ab5cc41177f5bc/pyclipper-1.4.0.tar.gz
+    sha256: 9882bd889f27da78add4dd6f881d25697efc740bf840274e749988d25496c8e1
+  - type: file
+    url: https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/pyyaml-6.0.3.tar.gz
+    sha256: d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f
+  - type: file
+    url: https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl
+    sha256: 481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
+  - type: file
+    url: https://files.pythonhosted.org/packages/51/62/957f34bf736d00124379fc7840ee073e12f533444bfcfaf7be0c1ece8a94/ufo2ft-3.9.1-py3-none-any.whl
+    sha256: e032dcc1b72e4d16e7d592282eb5ae0df008c542cfef3b03d4327c6db4981700
+  - type: file
+    url: https://files.pythonhosted.org/packages/99/e3/53c4bd16a3b8a57e2d8840a31bb8dfe2a94f2e5e09f21ca5557521394bbe/ufolib2-0.18.1-py3-none-any.whl
+    sha256: d9d46da19880c09a2e7a25facabe8f30e5847236af0b21721442313d1e037db3
+  - type: file
+    url: https://files.pythonhosted.org/packages/12/ed/045adc57c3a209fb3505c7b4e46273983330debef676e678248a83b3f0dd/ufomerge-1.9.8-py3-none-any.whl
+    sha256: fb9c2c1e606e3af63efa808c1430d20dac0311599d8053e312289a3115656142
+  - type: file
+    url: https://files.pythonhosted.org/packages/ce/c3/d46197354c75d61afba45f8371160736ccfde5f50aa660687292c3823909/unicodedata2-18.0.0.tar.gz
+    sha256: a9536291a5204caf6423ca7c56131d44f2aafc2fada35ff3a5eac82f7f8c62a7
+  - type: file
+    url: https://files.pythonhosted.org/packages/54/22/318c7980066769c6bcd9221ed2248294f5698811da099013098c670565ed/yarl-1.25.1-py3-none-any.whl
+    sha256: 681c758b0490f9e96b78e5fa8e8dc6e648e9185bb6eaebe73183c33ea0c445f3
+  - type: file
+    url: https://files.pythonhosted.org/packages/74/21/3b6af43a663b22b00e738bb0642931a2579e15da6852613d56c6aa535d28/zopfli-0.4.3.tar.gz
+    sha256: d3a50f91a13cea9bafe025de8fd87a005eb26de02a4f0c193127ddbf23ac8ebe
