@@ -1,7 +1,7 @@
 # Fontra Flatpak
 ## Flatpak repository for Fontra
 
-![Fontrapak Screenshot](screenshots/screenshot_02_dark.png)
+![Fontra Pak Screenshot](screenshots/screenshot_02_dark.png)
 
 ### Key Features
 
@@ -24,22 +24,45 @@
 flatpak install --from https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref
 ```
 * Type Y for yes and provide your password when prompted
-* Fontrapak with all its dependancy will be installed in your computer
+* Fontra Pak with all its dependencies will be installed on your computer
 
 ### Update
 
-* If Fontrapak is showing in your Software centre, you can press the "Update" button to update to the latest version.
-* Otherwise. open your terminal and type
+* If Fontra Pak is showing in your Software Centre, you can press the "Update" button to update to the latest version.
+* Otherwise, open your terminal and type
 ```bash
 flatpak update xyz.fontra.FontraPak
 ```
-### Running Fontra Flatpak
+### Running Fontra Pak
 
 * In terminal, start the application by typing
 ```bash
 flatpak run xyz.fontra.FontraPak
 ```
-* Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
+* Alternatively, open your app menu and click on the Fontra Pak icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra Pak icon" height="32">
+
+### Developer
+
+#### Building the Flatpak
+
+Requires `flatpak-builder`, plus the Freedesktop runtime and SDK 25.08:
+
+```bash
+flatpak install flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+flatpak-builder --user --install --force-clean build-dir xyz.fontra.FontraPak.yml
+```
+
+Run the app from the build directory without installing it:
+
+```bash
+flatpak-builder --run build-dir xyz.fontra.FontraPak.yml fontrapak
+```
+
+#### Notes
+
+* The manifest packages the prebuilt Ubuntu release archive (`FontraPak-Ubuntu.tgz`), not a build from source.
+* The desktop entry, MIME definitions (`xyz.fontra.FontraPak.xml`), and metainfo are installed from this repository.
+* When you bump the release, update both the `url` and `sha256` for the archive in `xyz.fontra.FontraPak.yml`.  
 
 ### Known Issues
 
