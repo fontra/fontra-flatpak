@@ -1,7 +1,7 @@
 # Fontra Flatpak
 ## Flatpak repository for Fontra
 
-![Fontrapak Screenshot](screenshots/screenshot_02_dark.png)
+![FontraPak Screenshot](screenshots/screenshot_02_dark.png)
 
 ### Key Features
 
@@ -24,22 +24,22 @@
 flatpak install --from https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref
 ```
 * Type Y for yes and provide your password when prompted
-* Fontra Flatpak with all its dependencies will be installed on your computer
+* FontraPak with all its dependencies will be installed on your computer
 
 ### Update
 
-* If Fontrapak is showing in your Software centre, you can press the "Update" button to update to the latest version.
+* If FontraPak is showing in your Software Centre, you can press the "Update" button to update to the latest version.
 * Otherwise, open your terminal and type
 ```bash
 flatpak update xyz.fontra.FontraPak
 ```
-### Running Fontra Flatpak
+### Running FontraPak
 
 * In terminal, start the application by typing
 ```bash
 flatpak run xyz.fontra.FontraPak
 ```
-* Alternatively, open your app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
+* Alternatively, open your app menu and click on the FontraPak icon <img src="https://fontra.xyz/fontra-icon.svg" alt="FontraPak icon" height="32">
 
 ### Developer
 
