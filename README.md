@@ -24,12 +24,12 @@
 flatpak install --from https://fontra.github.io/fontra-flatpak/xyz.fontra.FontraPak.flatpakref
 ```
 * Type Y for yes and provide your password when prompted
-* Fontrapak with all its dependancy will be installed in your computer
+* Fontra Flatpak with all its dependencies will be installed on your computer
 
 ### Update
 
 * If Fontrapak is showing in your Software centre, you can press the "Update" button to update to the latest version.
-* Otherwise. open your terminal and type
+* Otherwise, open your terminal and type
 ```bash
 flatpak update xyz.fontra.FontraPak
 ```
@@ -39,7 +39,7 @@ flatpak update xyz.fontra.FontraPak
 ```bash
 flatpak run xyz.fontra.FontraPak
 ```
-* Alternatively, open your app menu app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
+* Alternatively, open your app menu and click on the Fontra icon <img src="https://fontra.xyz/fontra-icon.svg" alt="Fontra icon" height="32">
 
 ### Developer
 
@@ -62,7 +62,7 @@ flatpak-builder --run build-dir xyz.fontra.FontraPak.yml fontrapak
 
 * The manifest packages the prebuilt Ubuntu release archive (`FontraPak-Ubuntu.tgz`), not a build from source.
 * The desktop entry, MIME definitions (`xyz.fontra.FontraPak.xml`), and metainfo are installed from this repository.
-* When you bump the release, update both the `url` and `sha256` for the archive in `xyz.fontra.FontraPak.yml`.
+* When you bump the release, update both the `url` and `sha256` for the archive in `xyz.fontra.FontraPak.yml`.  
 
 ### Known Issues
 
