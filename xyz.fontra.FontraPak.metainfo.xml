@@ -1,17 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
 <component type="desktop">
   <id>xyz.fontra.FontraPak</id>
-  <name>FontraPak</name>
+  <name>Fontra Pak</name>
   <summary>Standalone desktop build of the Fontra font editor</summary>
   <developer id="xyz.fontra">
     <name>Just van Rossum</name>
   </developer>
   <description>
     <p>
-      FontraPak is a cross-platform desktop application bundling the open-source, browser-based Fontra font editor. Fontra is developed by Black[Foundry] and Just van Rossum with support from Google Fonts.
+      Fontra Pak is a cross-platform desktop application bundling the open-source, browser-based Fontra font editor. Fontra is developed by Black[Foundry] and Just van Rossum with support from Google Fonts.
     </p>
     <p>
-      Fontra focuses on variable font technology and advanced workflows for large font projects such as CJK, offering deeper variable font integration than traditional editors. As a standalone package, FontraPak allows easy installation and use outside the browser, bringing the full editing environment to your desktop.
+      Fontra focuses on variable font technology and advanced workflows for large font projects such as CJK, offering deeper variable font integration than traditional editors. As a standalone package, Fontra Pak allows easy installation and use outside the browser, bringing the full editing environment to your desktop.
     </p>
     <p>Features include:</p>
     <ul>
