@@ -27,6 +27,9 @@ modules:
         path: xyz.fontra.FontraPak.desktop
         dest-filename: xyz.fontra.FontraPak.desktop
       - type: file
+        path: xyz.fontra.FontraPak.xml
+        dest-filename: xyz.fontra.FontraPak.xml
+      - type: file
         path: xyz.fontra.FontraPak.metainfo.xml
         dest-filename: xyz.fontra.FontraPak.metainfo.xml
       - type: file
@@ -48,4 +51,5 @@ modules:
       - install -m755 fontrapak.sh /app/bin/fontrapak
       - install -Dm644 xyz.fontra.FontraPak.svg /app/share/icons/hicolor/scalable/apps/xyz.fontra.FontraPak.svg
       - install -Dm644 xyz.fontra.FontraPak.desktop /app/share/applications/xyz.fontra.FontraPak.desktop
+      - install -Dm644 xyz.fontra.FontraPak.xml /app/share/mime/packages/xyz.fontra.FontraPak.xml
       - install -Dm644 xyz.fontra.FontraPak.metainfo.xml /app/share/metainfo/xyz.fontra.FontraPak.metainfo.xml
